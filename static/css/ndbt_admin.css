@@ -1,22 +1,56 @@
 /* ==========================================================================
    NDBT Transport Management System - 2026 Enterprise Admin Theme
-   Design System: Precision Logistics Typography, Balanced Grids, & Micro-Interactions
+   Theme: Precision Logistics SaaS (Linear / Ramp / Flexport Aesthetic)
+   Pure Self-Contained CSS - Zero Reliance on Uncompiled Tailwind Classes
    ========================================================================== */
 
 /* 1. Global Typography & Numerical Alignment */
 :root {
-  --ndbt-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --ndbt-font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --ndbt-primary: #2563eb;
+  --ndbt-primary-hover: #1d4ed8;
+  --ndbt-slate-900: #0f172a;
+  --ndbt-slate-800: #1e293b;
+  --ndbt-slate-700: #334155;
+  --ndbt-slate-600: #475569;
+  --ndbt-slate-500: #64748b;
+  --ndbt-slate-400: #94a3b8;
+  --ndbt-slate-300: #cbd5e1;
+  --ndbt-slate-200: #e2e8f0;
+  --ndbt-slate-100: #f1f5f9;
+  --ndbt-slate-50: #f8fafc;
+  
+  --ndbt-emerald-bg: #ecfdf5;
+  --ndbt-emerald-border: #a7f3d0;
+  --ndbt-emerald-text: #059669;
+  --ndbt-emerald-dark: #065f46;
+
+  --ndbt-amber-bg: #fffbeb;
+  --ndbt-amber-border: #fde68a;
+  --ndbt-amber-text: #d97706;
+
+  --ndbt-rose-bg: #fff1f2;
+  --ndbt-rose-border: #fecdd3;
+  --ndbt-rose-text: #e11d48;
+
+  --ndbt-blue-bg: #eff6ff;
+  --ndbt-blue-border: #bfdbfe;
+  --ndbt-blue-text: #2563eb;
+
+  --ndbt-indigo-bg: #eef2ff;
+  --ndbt-indigo-border: #c7d2fe;
+  --ndbt-indigo-text: #4f46e5;
 }
 
 body {
-  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  color: var(--ndbt-slate-900);
+  background-color: var(--ndbt-slate-50);
 }
 
-/* Force Tabular Numbers across all financial/logistical figures */
+/* Force Tabular Numbers across all numerical figures */
 .tabular-nums,
 [data-column-name*="freight"],
 [data-column-name*="advance"],
@@ -27,227 +61,425 @@ body {
 [data-column-name*="date"],
 [data-column-name="lr_no"],
 .financial-num {
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums !important;
+  font-feature-settings: "tnum" !important;
 }
 
-/* 2. Scrollbar Ergonomics & Layout Stability */
-html, body, .overflow-x-auto, .overflow-y-auto {
-  scrollbar-gutter: stable;
-  scrollbar-width: thin;
-}
-
+/* Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
-
 ::-webkit-scrollbar-track {
   background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.35);
+  background: rgba(148, 163, 184, 0.4);
   border-radius: 9999px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(100, 116, 139, 0.6);
 }
 
-.dark ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.2);
+/* 2. Executive Dashboard Command Center Styles */
+.ndbt-header-banner {
+  background: #ffffff;
+  border: 1px solid var(--ndbt-slate-200);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
+}
+@media (min-width: 1024px) {
+  .ndbt-header-banner {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
 }
 
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.4);
+.ndbt-fy-pills {
+  display: inline-flex;
+  padding: 4px;
+  background: var(--ndbt-slate-100);
+  border: 1px solid var(--ndbt-slate-200);
+  border-radius: 0.75rem;
+  gap: 4px;
+  flex-wrap: wrap;
 }
 
-/* 3. Form Fieldset Grid & Alignment Engine */
-/* Guarantee that 2-column rows stay perfectly 50/50 without jumping */
-fieldset.module {
-  border: 1px solid var(--color-base-200, rgba(226, 232, 240, 0.8));
-  border-radius: 0.875rem;
-  background-color: var(--color-base-white, #ffffff);
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
-  margin-bottom: 1.5rem;
+.ndbt-fy-pill {
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ndbt-slate-600);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+.ndbt-fy-pill:hover {
+  color: var(--ndbt-slate-900);
+  background: rgba(255, 255, 255, 0.8);
+}
+.ndbt-fy-pill.active {
+  background: var(--ndbt-primary) !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3);
+}
+
+.ndbt-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--ndbt-primary);
+  color: #ffffff !important;
+  padding: 0.5rem 1.125rem;
+  border-radius: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease;
+}
+.ndbt-btn-primary:hover {
+  background: var(--ndbt-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+}
+
+/* 3. 8-KPI Responsive Grid */
+.ndbt-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1rem;
+}
+@media (min-width: 640px) {
+  .ndbt-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .ndbt-kpi-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.ndbt-kpi-card {
+  background: #ffffff;
+  border: 1px solid var(--ndbt-slate-200);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+}
+.ndbt-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.06);
+  border-color: var(--ndbt-slate-300);
+}
+
+.ndbt-kpi-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.ndbt-kpi-title {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ndbt-slate-500);
+}
+.ndbt-kpi-icon-wrap {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.625rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ndbt-kpi-value {
+  font-size: clamp(1.35rem, 1.8vw, 1.75rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin-top: 0.625rem;
+  color: var(--ndbt-slate-900);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
   overflow: hidden;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  text-overflow: ellipsis;
+}
+.ndbt-kpi-subtitle {
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  color: var(--ndbt-slate-500);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.dark fieldset.module {
-  border-color: var(--color-base-800, rgba(30, 41, 59, 0.8));
-  background-color: var(--color-base-900, #0f172a);
+/* 4. Settlement Health Multi-Segment Visual Progress Bar */
+.ndbt-settlement-bar {
+  height: 16px;
+  background-color: var(--ndbt-slate-200);
+  border-radius: 9999px;
+  overflow: hidden;
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  margin: 1.25rem 0;
+}
+.ndbt-seg {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.5s ease;
+  min-width: 4px;
+}
+.ndbt-seg-received { background-color: #10b981 !important; }
+.ndbt-seg-pending  { background-color: #f59e0b !important; }
+.ndbt-seg-nil      { background-color: #94a3b8 !important; }
+.ndbt-seg-overdue  { background-color: #ef4444 !important; }
+.ndbt-seg-topay    { background-color: #6366f1 !important; }
+
+.ndbt-legend-card {
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  background: var(--ndbt-slate-50);
+  border: 1px solid var(--ndbt-slate-200);
+  text-decoration: none;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+}
+.ndbt-legend-card:hover {
+  background: #ffffff;
+  border-color: var(--ndbt-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
-/* Form row padding & balanced distribution */
+.ndbt-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  display: inline-block;
+}
+.ndbt-dot-received { background-color: #10b981; }
+.ndbt-dot-pending  { background-color: #f59e0b; }
+.ndbt-dot-nil      { background-color: #94a3b8; }
+.ndbt-dot-overdue  { background-color: #ef4444; }
+.ndbt-dot-topay    { background-color: #6366f1; }
+
+/* 5. Operational Attention Rows */
+.ndbt-attention-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: var(--ndbt-slate-50);
+  border: 1px solid var(--ndbt-slate-200);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+.ndbt-attention-row:hover {
+  background: #ffffff;
+  border-color: var(--ndbt-primary);
+  transform: translateX(2px);
+}
+.ndbt-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.625rem;
+  border-radius: 9999px;
+  font-variant-numeric: tabular-nums;
+}
+.ndbt-badge-amber {
+  background: var(--ndbt-amber-bg);
+  color: var(--ndbt-amber-text);
+  border: 1px solid var(--ndbt-amber-border);
+}
+.ndbt-badge-blue {
+  background: var(--ndbt-blue-bg);
+  color: var(--ndbt-blue-text);
+  border: 1px solid var(--ndbt-blue-border);
+}
+.ndbt-badge-rose {
+  background: var(--ndbt-rose-bg);
+  color: var(--ndbt-rose-text);
+  border: 1px solid var(--ndbt-rose-border);
+}
+
+/* 6. Top Transit Corridors Cards */
+.ndbt-lane-card {
+  padding: 1rem;
+  border-radius: 0.875rem;
+  background: #ffffff;
+  border: 1px solid var(--ndbt-slate-200);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  transition: all 0.15s ease;
+}
+.ndbt-lane-card:hover {
+  border-color: var(--ndbt-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.05);
+}
+.ndbt-lane-rank {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--ndbt-blue-bg);
+  color: var(--ndbt-blue-text);
+}
+
+/* 7. Status Badges across Tables */
+.ndbt-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+.ndbt-status-received {
+  background-color: var(--ndbt-emerald-bg) !important;
+  color: var(--ndbt-emerald-dark) !important;
+  border: 1px solid var(--ndbt-emerald-border) !important;
+}
+.ndbt-status-pending {
+  background-color: var(--ndbt-amber-bg) !important;
+  color: var(--ndbt-amber-text) !important;
+  border: 1px solid var(--ndbt-amber-border) !important;
+}
+.ndbt-status-overdue {
+  background-color: var(--ndbt-rose-bg) !important;
+  color: var(--ndbt-rose-text) !important;
+  border: 1px solid var(--ndbt-rose-border) !important;
+}
+.ndbt-status-nil {
+  background-color: var(--ndbt-slate-100) !important;
+  color: var(--ndbt-slate-600) !important;
+  border: 1px solid var(--ndbt-slate-300) !important;
+}
+.ndbt-status-topay {
+  background-color: var(--ndbt-indigo-bg) !important;
+  color: var(--ndbt-indigo-text) !important;
+  border: 1px solid var(--ndbt-indigo-border) !important;
+}
+
+/* 8. Table Whitespace & Alignment Fixes */
+#changelist-form td,
+#changelist-form th,
+.ndbt-table td,
+.ndbt-table th {
+  white-space: nowrap !important;
+  padding: 0.625rem 0.875rem !important;
+  vertical-align: middle !important;
+}
+
+.ndbt-vehicle-chip {
+  font-family: var(--ndbt-font-mono, monospace) !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  padding: 2px 7px !important;
+  border-radius: 4px !important;
+  background: var(--ndbt-slate-100) !important;
+  color: var(--ndbt-slate-800) !important;
+  border: 1px solid var(--ndbt-slate-300) !important;
+  display: inline-block !important;
+}
+
+.ndbt-lr-link {
+  color: var(--ndbt-primary) !important;
+  font-weight: 700 !important;
+  text-decoration: none !important;
+}
+.ndbt-lr-link:hover {
+  text-decoration: underline !important;
+}
+
+/* 9. Trip Change Form Live Banner: Horizontal 3-Deck Grid */
+#live-calculation-banner {
+  background: #ffffff !important;
+  border: 1px solid var(--ndbt-slate-200) !important;
+  border-radius: 1rem !important;
+  padding: 1.25rem !important;
+  margin-bottom: 1.5rem !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+
+.ndbt-calc-deck {
+  display: grid !important;
+  grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  gap: 1rem !important;
+  padding-top: 1rem !important;
+}
+@media (min-width: 768px) {
+  .ndbt-calc-deck {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+.ndbt-calc-card {
+  padding: 1rem !important;
+  border-radius: 0.75rem !important;
+  border: 1px solid var(--ndbt-slate-200) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+}
+.ndbt-calc-card-slate { background: var(--ndbt-slate-50) !important; }
+.ndbt-calc-card-blue  { background: var(--ndbt-blue-bg) !important; border-color: var(--ndbt-blue-border) !important; }
+.ndbt-calc-card-emerald { background: var(--ndbt-emerald-bg) !important; border-color: var(--ndbt-emerald-border) !important; }
+
+/* 10. Change Form Fieldset Alignment: Labels ON TOP of Inputs */
 .form-row {
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid var(--color-base-100, rgba(241, 245, 249, 0.8));
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.375rem !important;
+  padding: 0.875rem 1.25rem !important;
 }
 
-.dark .form-row {
-  border-bottom-color: var(--color-base-800, rgba(30, 41, 59, 0.5));
+.form-row > label {
+  font-size: 0.6875rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: var(--ndbt-slate-600) !important;
+  margin-bottom: 0.25rem !important;
 }
 
-.form-row:last-child {
-  border-bottom: none;
-}
-
-/* Grid columns balance */
 @media (min-width: 1024px) {
   .lg\:grid-cols-2 {
     display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-columns: 1fr 1fr !important;
     gap: 1.5rem !important;
   }
 }
 
-/* Input Fields Refinement */
-input[type="text"],
-input[type="number"],
-input[type="date"],
-input[type="email"],
-select,
-textarea {
-  border-radius: 0.5rem !important;
-  font-size: 0.875rem !important;
-  line-height: 1.25rem !important;
-  padding: 0.625rem 0.875rem !important;
-  transition: all 0.15s ease-in-out !important;
+/* 11. 5-Column Responsive Summary Totals Bar on Changelist */
+.ndbt-totals-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.75rem !important;
 }
-
-/* Readonly fields appearance */
-.readonly {
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
-  background-color: var(--color-base-50, rgba(248, 250, 252, 0.8));
-  border: 1px dashed var(--color-base-300, rgba(203, 213, 225, 0.8));
-  color: var(--color-base-800, #1e293b);
-  min-height: 2.5rem;
-  width: 100%;
-}
-
-.dark .readonly {
-  background-color: var(--color-base-800, rgba(30, 41, 59, 0.5));
-  border-color: var(--color-base-700, rgba(51, 65, 85, 0.8));
-  color: var(--color-base-200, #e2e8f0);
-}
-
-/* 4. Tab Navigation Refinement */
-nav#tabs-items {
-  border: 1px solid var(--color-base-200, rgba(226, 232, 240, 0.8));
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-}
-
-.dark nav#tabs-items {
-  border-color: var(--color-base-800, rgba(30, 41, 59, 0.8));
-}
-
-nav#tabs-items a {
-  transition: all 0.15s ease-in-out;
-}
-
-nav#tabs-items a.active {
-  font-weight: 600;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-}
-
-/* 5. Data Grid / Changelist Enhancements */
-#changelist-form table {
-  border-collapse: separate;
-  border-spacing: 0;
-  width: 100%;
-}
-
-#changelist-form thead th {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: rgba(248, 250, 252, 0.95);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-bottom: 2px solid var(--color-base-200, rgba(226, 232, 240, 1));
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-size: 0.6875rem;
-}
-
-.dark #changelist-form thead th {
-  background: rgba(15, 23, 42, 0.95);
-  border-bottom-color: var(--color-base-800, rgba(30, 41, 59, 1));
-}
-
-#changelist-form tbody tr {
-  transition: background-color 0.12s ease-in-out;
-}
-
-#changelist-form tbody tr:hover {
-  background-color: rgba(241, 245, 249, 0.7);
-}
-
-.dark #changelist-form tbody tr:hover {
-  background-color: rgba(30, 41, 59, 0.5);
-}
-
-#changelist-form td {
-  padding: 0.75rem 1rem;
-  vertical-align: middle;
-  border-bottom: 1px solid var(--color-base-100, rgba(241, 245, 249, 0.8));
-}
-
-.dark #changelist-form td {
-  border-bottom-color: var(--color-base-800, rgba(30, 41, 59, 0.4));
-}
-
-/* 6. Dashboard Executive Card Hover & Transitions */
-.kpi-card {
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
-}
-
-.kpi-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
-}
-
-.dark .kpi-card:hover {
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
-}
-
-/* 7. Settlement Health Multi-Segment Progress Bar */
-.settlement-bar {
-  display: flex;
-  height: 0.875rem;
-  border-radius: 9999px;
-  overflow: hidden;
-  background-color: var(--color-base-100, #f1f5f9);
-  padding: 2px;
-  gap: 2px;
-}
-
-.dark .settlement-bar {
-  background-color: var(--color-base-800, #1e293b);
-}
-
-.settlement-segment {
-  height: 100%;
-  border-radius: 9999px;
-  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  position: relative;
-}
-
-/* 8. Quick Filter Pill Tabs */
-.fy-pill {
-  transition: all 0.15s ease-in-out;
-}
-
-.fy-pill.active {
-  background-color: var(--color-primary-600, #2563eb) !important;
-  color: #ffffff !important;
-  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.25);
+@media (min-width: 1024px) {
+  .ndbt-totals-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
 }

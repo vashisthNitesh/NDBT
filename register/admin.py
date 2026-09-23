@@ -340,8 +340,8 @@ class TripAdmin(ModelAdmin, ExportMixin):
         'lr_no_link',
         'booking_date',
         'vehicle_display',
-        'consignor',
-        'lorry_owner',
+        'consignor_display',
+        'owner_display',
         'route_display',
         'formatted_freight',
         'formatted_advance',
@@ -437,50 +437,61 @@ class TripAdmin(ModelAdmin, ExportMixin):
     @display(description="LR No.", ordering='lr_no')
     def lr_no_link(self, obj):
         url = reverse('admin:register_trip_change', args=[obj.pk])
-        style = 'line-through text-gray-400' if obj.is_cancelled else 'font-bold text-primary-600 dark:text-primary-400 hover:underline'
+        style = 'line-through text-gray-400' if obj.is_cancelled else 'ndbt-lr-link'
         return format_html('<a href="{}" class="{}">#{}</a>', url, style, obj.lr_no)
 
     @display(description="Vehicle", ordering='vehicle__reg_no')
     def vehicle_display(self, obj):
-        return format_html('<span class="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-base-100 dark:bg-base-800 text-base-800 dark:text-base-200">{}</span>', obj.vehicle.reg_no)
+        return format_html('<span class="ndbt-vehicle-chip">{}</span>', obj.vehicle.reg_no)
+
+    @display(description="Customer", ordering='consignor__name')
+    def consignor_display(self, obj):
+        name = obj.consignor.name if obj.consignor else '-'
+        short = name if len(name) <= 24 else name[:22] + '…'
+        return format_html('<span class="whitespace-nowrap font-medium text-slate-900" title="{}">{}</span>', name, short)
+
+    @display(description="Transporter", ordering='lorry_owner__name')
+    def owner_display(self, obj):
+        name = obj.lorry_owner.name if obj.lorry_owner else '-'
+        short = name if len(name) <= 22 else name[:20] + '…'
+        return format_html('<span class="whitespace-nowrap text-slate-600" title="{}">{}</span>', name, short)
 
     @display(description="Route")
     def route_display(self, obj):
-        return format_html('<span class="text-base-600 dark:text-base-400 whitespace-nowrap text-xs">{} &rarr; {}</span>', obj.origin, obj.destination)
+        return format_html('<span class="text-slate-600 whitespace-nowrap text-xs">{} &rarr; {}</span>', obj.origin, obj.destination)
 
     @display(description="Freight", ordering='freight')
     def formatted_freight(self, obj):
-        return format_html('<span class="font-medium tabular-nums text-base-900 dark:text-base-100">{}</span>', indian_currency(obj.freight))
+        return format_html('<span class="font-bold tabular-nums text-slate-900">{}</span>', indian_currency(obj.freight))
 
     @display(description="Advance", ordering='advance')
     def formatted_advance(self, obj):
-        return format_html('<span class="font-medium tabular-nums text-amber-600 dark:text-amber-400">{}</span>', indian_currency(obj.advance))
+        return format_html('<span class="font-bold tabular-nums text-amber-600">{}</span>', indian_currency(obj.advance))
 
     @display(description="Adv. Recd")
     def formatted_adv_recd(self, obj):
         val = obj.advance_received_total
         if val > 0:
-            return format_html('<span class="font-medium tabular-nums text-emerald-600 dark:text-emerald-400">{}</span>', indian_currency(val))
-        return format_html('<span class="text-base-400">-</span>')
+            return format_html('<span class="font-bold tabular-nums text-emerald-600">{}</span>', indian_currency(val))
+        return format_html('<span class="text-slate-400">-</span>')
 
     @display(description="Total Balance", ordering='total_balance')
     def formatted_total_balance(self, obj):
         if obj.total_balance == 0:
-            return format_html('<span class="font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">{}</span>', indian_currency(obj.total_balance))
-        return format_html('<span class="font-bold tabular-nums text-rose-600 dark:text-rose-400">{}</span>', indian_currency(obj.total_balance))
+            return format_html('<span class="font-bold tabular-nums text-emerald-600">{}</span>', indian_currency(obj.total_balance))
+        return format_html('<span class="font-black tabular-nums text-rose-600">{}</span>', indian_currency(obj.total_balance))
 
-    @display(
-        description="Balance Status",
-        label={
-            Trip.BalanceStatus.RECEIVED: "success",
-            Trip.BalanceStatus.PENDING: "warning",
-            Trip.BalanceStatus.NIL: "info",
-            Trip.BalanceStatus.NOT_RECEIVED: "danger",
-            Trip.BalanceStatus.TO_PAY: "warning",
-        },
-    )
+    @display(description="Status", ordering='balance_status')
     def show_balance_status(self, obj):
-        return obj.balance_status
+        classes = {
+            Trip.BalanceStatus.RECEIVED: ('ndbt-status-received', 'ndbt-dot-received'),
+            Trip.BalanceStatus.PENDING: ('ndbt-status-pending', 'ndbt-dot-pending'),
+            Trip.BalanceStatus.NOT_RECEIVED: ('ndbt-status-overdue', 'ndbt-dot-overdue'),
+            Trip.BalanceStatus.NIL: ('ndbt-status-nil', 'ndbt-dot-nil'),
+            Trip.BalanceStatus.TO_PAY: ('ndbt-status-topay', 'ndbt-dot-topay'),
+        }
+        pill_cls, dot_cls = classes.get(obj.balance_status, ('ndbt-status-nil', 'ndbt-dot-nil'))
+        return format_html('<span class="ndbt-status-pill {}"><span class="ndbt-dot {}"></span>{}</span>', pill_cls, dot_cls, obj.get_balance_status_display())
 
     @display(description="Memo", ordering='memo_no')
     def memo_display(self, obj):

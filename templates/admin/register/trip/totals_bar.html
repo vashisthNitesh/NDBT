@@ -1,59 +1,60 @@
 {% load i18n indian_numbers %}
 
 {% if summary_totals %}
-<div class="mb-4 rounded-2xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 p-4 shadow-sm">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-3 mb-3 border-b border-base-100 dark:border-base-800 gap-2">
-        <div class="flex items-center gap-2">
-            <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span class="text-xs font-bold uppercase tracking-wider text-base-900 dark:text-base-100">
-                Filtered Trips Ledger Summary
+<div class="mb-4 rounded-2xl bg-white border border-slate-200 p-4 shadow-sm">
+    <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 0.625rem; margin-bottom: 0.75rem; border-bottom: 1px solid var(--ndbt-slate-100); flex-wrap: wrap; gap: 0.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span class="ndbt-dot ndbt-dot-received" style="animation: pulse 2s infinite;"></span>
+            <span style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ndbt-slate-900);">
+                Filtered Ledger Summary
             </span>
-            <span class="text-xs text-base-400">
+            <span style="font-size: 0.75rem; color: var(--ndbt-slate-400);">
                 • 50 trips / page
             </span>
         </div>
-        <span class="text-xs font-bold px-3 py-1 rounded-full bg-base-100 dark:bg-base-800 text-base-800 dark:text-base-200 border border-base-200 dark:border-base-700">
-            {{ summary_totals.trip_count|default:"0" }} Matching Trips Filtered
+        <span style="font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.75rem; border-radius: 9999px; background: var(--ndbt-slate-100); color: var(--ndbt-slate-800); border: 1px solid var(--ndbt-slate-200); font-variant-numeric: tabular-nums;">
+            {{ summary_totals.trip_count|default:"0" }} Trips Filtered
         </span>
     </div>
 
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        <!-- Total Freight -->
-        <div class="p-3 rounded-xl bg-base-50/70 dark:bg-base-800/40 border border-base-200/80 dark:border-base-700/60">
-            <span class="text-[11px] font-bold text-base-500 dark:text-base-400 uppercase tracking-wider block mb-1">Contracted Freight</span>
-            <span class="text-sm sm:text-base font-black tabular-nums text-base-900 dark:text-base-100 block">
+    <!-- 5 Balanced Columns on Desktop -->
+    <div class="ndbt-totals-grid">
+        <!-- 1. Total Freight -->
+        <div style="padding: 0.75rem; border-radius: 0.75rem; background: var(--ndbt-slate-50); border: 1px solid var(--ndbt-slate-200);">
+            <span style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ndbt-slate-500); display: block; margin-bottom: 0.25rem;">Contracted Freight</span>
+            <span style="font-size: 1rem; font-weight: 900; color: var(--ndbt-slate-900); font-variant-numeric: tabular-nums; display: block;">
                 {{ summary_totals.total_freight|default:0|indian_currency }}
             </span>
         </div>
 
-        <!-- Advance Due -->
-        <div class="p-3 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/70 dark:border-amber-900/40">
-            <span class="text-[11px] font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wider block mb-1">Advance Liability</span>
-            <span class="text-sm sm:text-base font-black tabular-nums text-amber-600 dark:text-amber-400 block">
+        <!-- 2. Advance Liability -->
+        <div style="padding: 0.75rem; border-radius: 0.75rem; background: var(--ndbt-amber-bg); border: 1px solid var(--ndbt-amber-border);">
+            <span style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ndbt-amber-text); display: block; margin-bottom: 0.25rem;">Advance Liability</span>
+            <span style="font-size: 1rem; font-weight: 900; color: var(--ndbt-amber-text); font-variant-numeric: tabular-nums; display: block;">
                 {{ summary_totals.total_advance|default:0|indian_currency }}
             </span>
         </div>
 
-        <!-- Advance Received -->
-        <div class="p-3 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200/70 dark:border-emerald-900/40">
-            <span class="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider block mb-1">Adv. Collected</span>
-            <span class="text-sm sm:text-base font-black tabular-nums text-emerald-600 dark:text-emerald-400 block">
+        <!-- 3. Advance Collected -->
+        <div style="padding: 0.75rem; border-radius: 0.75rem; background: var(--ndbt-emerald-bg); border: 1px solid var(--ndbt-emerald-border);">
+            <span style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ndbt-emerald-text); display: block; margin-bottom: 0.25rem;">Adv. Collected</span>
+            <span style="font-size: 1rem; font-weight: 900; color: var(--ndbt-emerald-text); font-variant-numeric: tabular-nums; display: block;">
                 {{ summary_totals.total_adv_recd|default:0|indian_currency }}
             </span>
         </div>
 
-        <!-- Brokerage Commission -->
-        <div class="p-3 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-200/70 dark:border-indigo-900/40">
-            <span class="text-[11px] font-bold text-indigo-700 dark:text-indigo-300 uppercase tracking-wider block mb-1">Brokerage Income</span>
-            <span class="text-sm sm:text-base font-black tabular-nums text-indigo-600 dark:text-indigo-400 block">
+        <!-- 4. Commission -->
+        <div style="padding: 0.75rem; border-radius: 0.75rem; background: var(--ndbt-indigo-bg); border: 1px solid var(--ndbt-indigo-border);">
+            <span style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ndbt-indigo-text); display: block; margin-bottom: 0.25rem;">Brokerage Margin</span>
+            <span style="font-size: 1rem; font-weight: 900; color: var(--ndbt-indigo-text); font-variant-numeric: tabular-nums; display: block;">
                 {{ summary_totals.total_commission|default:0|indian_currency }}
             </span>
         </div>
 
-        <!-- Balance Pending -->
-        <div class="col-span-2 sm:col-span-1 p-3 rounded-xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200/70 dark:border-rose-900/40">
-            <span class="text-[11px] font-bold text-rose-700 dark:text-rose-300 uppercase tracking-wider block mb-1">Party Balance Due</span>
-            <span class="text-sm sm:text-base font-black tabular-nums text-rose-600 dark:text-rose-400 block">
+        <!-- 5. Party Balance Due -->
+        <div style="padding: 0.75rem; border-radius: 0.75rem; background: var(--ndbt-rose-bg); border: 1px solid var(--ndbt-rose-border);">
+            <span style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ndbt-rose-text); display: block; margin-bottom: 0.25rem;">Party Balance Due</span>
+            <span style="font-size: 1rem; font-weight: 900; color: var(--ndbt-rose-text); font-variant-numeric: tabular-nums; display: block;">
                 {{ summary_totals.total_balance|default:0|indian_currency }}
             </span>
         </div>
