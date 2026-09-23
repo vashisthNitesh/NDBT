@@ -3,10 +3,12 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 
 from register.models import (
-    LorryOwner,
-    Consignor,
+    Customer,
+    Transporter,
+    VehicleType,
     Vehicle,
     Location,
+    Lane,
     Trip,
     Receipt,
     ReceiptAllocation,
@@ -17,15 +19,17 @@ from register.models import (
 
 
 class Command(BaseCommand):
-    help = 'Seeds initial user groups (Admin, Accounts, Data Entry, Viewer) with appropriate permissions.'
+    help = 'Seeds user groups (Admin, Accounts, Data Entry, Viewer) with appropriate permissions.'
 
     def handle(self, *args, **options):
         # All register models
         all_models = [
-            LorryOwner,
-            Consignor,
+            Customer,
+            Transporter,
+            VehicleType,
             Vehicle,
             Location,
+            Lane,
             Trip,
             Receipt,
             ReceiptAllocation,
@@ -55,7 +59,7 @@ class Command(BaseCommand):
 
         # 3. Data Entry Group:
         # Trips, documents, masters. NO receipts or payments. NO delete!
-        data_entry_models = [LorryOwner, Consignor, Vehicle, Location, Trip, TripDocument]
+        data_entry_models = [Customer, Transporter, VehicleType, Vehicle, Location, Lane, Trip, TripDocument]
         data_entry_cts = [ContentType.objects.get_for_model(m) for m in data_entry_models]
         data_entry_group, created = Group.objects.get_or_create(name='Data Entry')
         data_entry_perms = Permission.objects.filter(

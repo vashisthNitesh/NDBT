@@ -6,15 +6,20 @@ from django.db import IntegrityError
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from register.models import (
-    LorryOwner,
-    Consignor,
+    Customer,
+    Transporter,
+    VehicleType,
     Vehicle,
+    Location,
+    Lane,
     Trip,
     Receipt,
     ReceiptAllocation,
     OwnerPayment,
     OwnerPaymentAllocation,
     TripDocument,
+    LorryOwner,
+    Consignor,
 )
 
 
@@ -212,3 +217,22 @@ class ModelsTestCase(TestCase):
         doc.delete()
         trip.refresh_from_db()
         self.assertFalse(trip.has_pod)
+
+    def test_lane_and_location(self):
+        loc1 = Location.objects.create(name='Silvassa', state='DNH & DD')
+        loc2 = Location.objects.create(name='Noida', state='Uttar Pradesh')
+        lane = Lane.objects.create(origin=loc1, destination=loc2)
+        self.assertEqual(lane.name, 'Silvassa → Noida')
+        self.assertEqual(str(lane), 'Silvassa → Noida')
+
+    def test_customer_and_transporter_clean(self):
+        cust = Customer.objects.create(name='  MRS Company  ', short_code='  MRS  ', pan=' abcde1234f ')
+        self.assertEqual(cust.name, 'MRS Company')
+        self.assertEqual(cust.short_code, 'MRS')
+        self.assertEqual(cust.pan, 'ABCDE1234F')
+        self.assertEqual(cust.code, 'MRS')
+
+        trans = Transporter.objects.create(name='  TLS Transport  ', short_code='  TLS  ', pan=' aaaaa0000a ')
+        self.assertEqual(trans.name, 'TLS Transport')
+        self.assertEqual(trans.short_code, 'TLS')
+        self.assertEqual(trans.pan, 'AAAAA0000A')

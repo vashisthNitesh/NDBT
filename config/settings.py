@@ -84,6 +84,14 @@ DATABASES = {
     'default': env.db('DATABASE_URL', default=f'sqlite:///{BASE_DIR / "db.sqlite3"}')
 }
 
+# Use fast SQLite in-memory database during test runs
+import sys
+if 'test' in sys.argv:
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': ':memory:',
+    }
+
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
