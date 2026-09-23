@@ -139,13 +139,38 @@ class LaneAdmin(ModelAdmin):
 class ReceiptAllocationInline(TabularInline):
     model = ReceiptAllocation
     autocomplete_fields = ('trip',)
+    extra = 1
+
+
+class TripReceiptAllocationInline(TabularInline):
+    model = ReceiptAllocation
+    fields = ('receipt_link', 'receipt_date', 'amount')
+    readonly_fields = ('receipt_link', 'receipt_date', 'amount')
     extra = 0
+    can_delete = False
+    verbose_name = "Linked Customer Receipt"
+    verbose_name_plural = "Linked Customer Receipts (Inward Payments)"
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    @display(description="Receipt Reference")
+    def receipt_link(self, obj):
+        if obj.receipt_id:
+            url = reverse('admin:register_receipt_change', args=[obj.receipt_id])
+            ref = f" [{obj.receipt.reference}]" if obj.receipt.reference else ""
+            return format_html('<a href="{}" class="font-bold text-primary-600 hover:underline">Receipt #{} - ₹{}{}</a>', url, obj.receipt_id, obj.receipt.amount, ref)
+        return '-'
+
+    @display(description="Date")
+    def receipt_date(self, obj):
+        return obj.receipt.date if obj.receipt else '-'
 
 
 @admin.register(Receipt)
 class ReceiptAdmin(ModelAdmin):
     list_display = ('id', 'consignor', 'date', 'formatted_amount', 'mode', 'reference', 'allocated_total_display', 'unallocated_display')
-    search_fields = ('reference', 'consignor__name', 'notes')
+    search_fields = ('id', 'reference', 'consignor__name', 'notes')
     list_filter = (
         ('date', RangeDateFilter),
         ('mode', ChoicesDropdownFilter),
@@ -172,13 +197,39 @@ class ReceiptAdmin(ModelAdmin):
 class OwnerPaymentAllocationInline(TabularInline):
     model = OwnerPaymentAllocation
     autocomplete_fields = ('trip',)
+    extra = 1
+
+
+class TripOwnerPaymentAllocationInline(TabularInline):
+    model = OwnerPaymentAllocation
+    fields = ('payment_link', 'payment_date', 'amount')
+    readonly_fields = ('payment_link', 'payment_date', 'amount')
     extra = 0
+    can_delete = False
+    verbose_name = "Linked Owner Payment"
+    verbose_name_plural = "Linked Owner Payments (Outward Settlement)"
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    @display(description="Payment Reference")
+    def payment_link(self, obj):
+        if obj.payment_id:
+            url = reverse('admin:register_ownerpayment_change', args=[obj.payment_id])
+            ref = f" [{obj.payment.reference}]" if obj.payment.reference else ""
+            amt = obj.payment.amount if obj.payment.amount is not None else 'Unknown'
+            return format_html('<a href="{}" class="font-bold text-primary-600 hover:underline">Payment #{} - ₹{}{}</a>', url, obj.payment_id, amt, ref)
+        return '-'
+
+    @display(description="Date")
+    def payment_date(self, obj):
+        return obj.payment.date if obj.payment else '-'
 
 
 @admin.register(OwnerPayment)
 class OwnerPaymentAdmin(ModelAdmin):
     list_display = ('id', 'lorry_owner', 'date', 'formatted_amount', 'mode', 'reference', 'allocated_total_display')
-    search_fields = ('reference', 'lorry_owner__name', 'notes')
+    search_fields = ('id', 'reference', 'lorry_owner__name', 'notes')
     list_filter = (
         ('date', RangeDateFilter),
         ('mode', ChoicesDropdownFilter),
@@ -274,14 +325,18 @@ class TripDocumentAdmin(ModelAdmin):
 class TripAdmin(ModelAdmin, ExportMixin):
     resource_classes = [TripResource]
     export_form_class = ExportForm
-    change_list_template = 'admin/register/trip/change_list.html'
+    list_fullwidth = True
+    list_horizontal_scrollbar_top = True
+    warn_unsaved_form = True
+    list_before_template = 'admin/register/trip/totals_bar.html'
+    change_form_before_template = 'admin/register/trip/calculation_banner.html'
 
     list_display = (
         'lr_no_link',
         'booking_date',
-        'vehicle',
-        'lorry_owner',
+        'vehicle_display',
         'consignor',
+        'lorry_owner',
         'route_display',
         'formatted_freight',
         'formatted_advance',
@@ -315,7 +370,7 @@ class TripAdmin(ModelAdmin, ExportMixin):
 
     autocomplete_fields = ('vehicle', 'lorry_owner', 'consignor', 'lane')
     readonly_fields = ('advance_balance', 'balance', 'total_balance', 'financial_year', 'created_at', 'updated_at')
-    inlines = [ReceiptAllocationInline, OwnerPaymentAllocationInline, TripDocumentInline]
+    inlines = [TripReceiptAllocationInline, TripOwnerPaymentAllocationInline, TripDocumentInline]
 
     fieldsets = (
         ('1. Booking Information', {
@@ -382,27 +437,34 @@ class TripAdmin(ModelAdmin, ExportMixin):
         style = 'line-through text-gray-400' if obj.is_cancelled else 'font-bold text-primary-600 dark:text-primary-400 hover:underline'
         return format_html('<a href="{}" class="{}">#{}</a>', url, style, obj.lr_no)
 
+    @display(description="Vehicle", ordering='vehicle__reg_no')
+    def vehicle_display(self, obj):
+        return format_html('<span class="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-base-100 dark:bg-base-800 text-base-800 dark:text-base-200">{}</span>', obj.vehicle.reg_no)
+
     @display(description="Route")
     def route_display(self, obj):
-        return f"{obj.origin} → {obj.destination}"
+        return format_html('<span class="text-base-600 dark:text-base-400 whitespace-nowrap text-xs">{} &rarr; {}</span>', obj.origin, obj.destination)
 
     @display(description="Freight", ordering='freight')
     def formatted_freight(self, obj):
-        return indian_currency(obj.freight)
+        return format_html('<span class="font-medium tabular-nums text-base-900 dark:text-base-100">{}</span>', indian_currency(obj.freight))
 
     @display(description="Advance", ordering='advance')
     def formatted_advance(self, obj):
-        return indian_currency(obj.advance)
+        return format_html('<span class="font-medium tabular-nums text-amber-600 dark:text-amber-400">{}</span>', indian_currency(obj.advance))
 
     @display(description="Adv. Recd")
     def formatted_adv_recd(self, obj):
         val = obj.advance_received_total
-        return indian_currency(val) if val > 0 else '-'
+        if val > 0:
+            return format_html('<span class="font-medium tabular-nums text-emerald-600 dark:text-emerald-400">{}</span>', indian_currency(val))
+        return format_html('<span class="text-base-400">-</span>')
 
     @display(description="Total Balance", ordering='total_balance')
     def formatted_total_balance(self, obj):
-        color = "text-emerald-600 font-semibold" if obj.total_balance == 0 else "text-gray-900 dark:text-gray-100 font-bold"
-        return format_html('<span class="{}">{}</span>', color, indian_currency(obj.total_balance))
+        if obj.total_balance == 0:
+            return format_html('<span class="font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">{}</span>', indian_currency(obj.total_balance))
+        return format_html('<span class="font-bold tabular-nums text-rose-600 dark:text-rose-400">{}</span>', indian_currency(obj.total_balance))
 
     @display(
         description="Balance Status",

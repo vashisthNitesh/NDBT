@@ -1,0 +1,59 @@
+{% load i18n indian_numbers %}
+
+{% if summary_totals %}
+<div class="mb-4 rounded-xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 p-4 shadow-sm">
+    <div class="flex items-center justify-between pb-3 mb-3 border-b border-base-100 dark:border-base-800">
+        <div class="flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+            <span class="text-xs font-bold uppercase tracking-wider text-base-600 dark:text-base-400">
+                Filtered Trips Summary
+            </span>
+        </div>
+        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-base-100 dark:bg-base-800 text-base-700 dark:text-base-300">
+            {{ summary_totals.trip_count|default:"0" }} Trips Selected
+        </span>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <!-- Total Freight -->
+        <div class="p-3 rounded-lg bg-base-50 dark:bg-base-800/40 border border-base-100 dark:border-base-800">
+            <span class="text-[11px] font-medium text-base-500 dark:text-base-400 block mb-0.5">Total Freight</span>
+            <span class="text-sm sm:text-base font-bold text-base-900 dark:text-base-100 block">
+                {{ summary_totals.total_freight|default:0|indian_currency }}
+            </span>
+        </div>
+
+        <!-- Advance Due -->
+        <div class="p-3 rounded-lg bg-base-50 dark:bg-base-800/40 border border-base-100 dark:border-base-800">
+            <span class="text-[11px] font-medium text-base-500 dark:text-base-400 block mb-0.5">Advance Due</span>
+            <span class="text-sm sm:text-base font-bold text-amber-600 dark:text-amber-400 block">
+                {{ summary_totals.total_advance|default:0|indian_currency }}
+            </span>
+        </div>
+
+        <!-- Advance Received -->
+        <div class="p-3 rounded-lg bg-base-50 dark:bg-base-800/40 border border-base-100 dark:border-base-800">
+            <span class="text-[11px] font-medium text-base-500 dark:text-base-400 block mb-0.5">Adv. Received</span>
+            <span class="text-sm sm:text-base font-bold text-emerald-600 dark:text-emerald-400 block">
+                {{ summary_totals.total_adv_recd|default:0|indian_currency }}
+            </span>
+        </div>
+
+        <!-- Brokerage Commission -->
+        <div class="p-3 rounded-lg bg-base-50 dark:bg-base-800/40 border border-base-100 dark:border-base-800">
+            <span class="text-[11px] font-medium text-base-500 dark:text-base-400 block mb-0.5">Commission</span>
+            <span class="text-sm sm:text-base font-bold text-blue-600 dark:text-blue-400 block">
+                {{ summary_totals.total_commission|default:0|indian_currency }}
+            </span>
+        </div>
+
+        <!-- Balance Pending -->
+        <div class="col-span-2 sm:col-span-1 p-3 rounded-lg bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60">
+            <span class="text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 block mb-0.5">Total Balance</span>
+            <span class="text-sm sm:text-base font-extrabold text-emerald-700 dark:text-emerald-400 block">
+                {{ summary_totals.total_balance|default:0|indian_currency }}
+            </span>
+        </div>
+    </div>
+</div>
+{% endif %}

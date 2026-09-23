@@ -1,0 +1,37 @@
+<div id="live-calculation-banner" class="rounded-xl border border-base-200 dark:border-base-800 bg-base-50/90 dark:bg-base-900/90 p-4 shadow-sm mb-6 transition">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-base-200 dark:border-base-800">
+        <div class="flex items-center gap-2">
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider bg-primary-100 text-primary-800 dark:bg-primary-950 dark:text-primary-300">
+                Live Calculation
+            </span>
+            <span class="text-xs text-base-500 dark:text-base-400">
+                Amounts auto-calculate as you enter Freight, Advance, Commission, TDS & Detention
+            </span>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="text-[11px] text-base-500 font-medium">Quick TDS:</span>
+            <button type="button" id="btn-tds-1" class="text-xs px-2.5 py-1 rounded bg-white dark:bg-base-800 border border-base-300 dark:border-base-700 text-base-700 dark:text-base-300 font-semibold hover:bg-base-100 dark:hover:bg-base-700 transition">1% TDS</button>
+            <button type="button" id="btn-tds-2" class="text-xs px-2.5 py-1 rounded bg-white dark:bg-base-800 border border-base-300 dark:border-base-700 text-base-700 dark:text-base-300 font-semibold hover:bg-base-100 dark:hover:bg-base-700 transition">2% TDS</button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 text-center sm:text-left">
+        <div class="p-3 rounded-lg bg-white dark:bg-base-800 border border-base-200 dark:border-base-700">
+            <span class="text-xs text-base-500 dark:text-base-400 block font-medium">Advance Balance (Transporter)</span>
+            <span id="preview-adv-bal" class="text-base font-bold text-base-900 dark:text-base-100 mt-0.5 block">₹ 0.00</span>
+            <span class="text-[10px] text-base-400">Advance − Commission − Lorry Adv. − TDS</span>
+        </div>
+
+        <div class="p-3 rounded-lg bg-white dark:bg-base-800 border border-base-200 dark:border-base-700">
+            <span class="text-xs text-base-500 dark:text-base-400 block font-medium">Freight Balance (Party)</span>
+            <span id="preview-balance" class="text-base font-bold text-blue-600 dark:text-blue-400 mt-0.5 block">₹ 0.00</span>
+            <span class="text-[10px] text-base-400">Freight − Advance</span>
+        </div>
+
+        <div class="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60">
+            <span class="text-xs text-emerald-800 dark:text-emerald-300 block font-semibold">Total Balance Due (Party)</span>
+            <span id="preview-total-bal" class="text-lg font-black text-emerald-700 dark:text-emerald-400 mt-0.5 block">₹ 0.00</span>
+            <span class="text-[10px] text-emerald-600 dark:text-emerald-400">Balance + Labour + Holding</span>
+        </div>
+    </div>
+</div>
