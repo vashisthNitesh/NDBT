@@ -3,14 +3,14 @@
 set -o errexit
 
 # Install dependencies
-pip install --upgrade pip
-pip install -r requirements.txt
+pip3 install --upgrade pip
+pip3 install -r requirements.txt
 
 # Collect static files for WhiteNoise
-python manage.py collectstatic --no-input
+python3 manage.py collectstatic --no-input
 
 # Run database migrations
-python manage.py migrate
+python3 manage.py migrate
 
 # Seed permission groups (Admin, Accounts, Data Entry, Viewer)
-python manage.py seed_groups
+python3 manage.py seed_groups
