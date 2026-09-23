@@ -537,118 +537,163 @@ class Command(BaseCommand):
             fy_stats[fy]['adv_recd'] += t['adv_recd']
             fy_stats[fy]['total_bal'] += t['total_balance']
 
-        # If commit mode, execute DB transactions
+        # If commit mode, execute DB transactions with bulk operations for high performance
         created_trips_count = 0
         updated_trips_count = 0
         created_receipts_count = 0
         created_payments_count = 0
 
         if commit:
-            self.stdout.write(self.style.MIGRATE_HEADING("Writing records to database..."))
+            self.stdout.write(self.style.MIGRATE_HEADING("Writing records to database in high-speed batches..."))
             with transaction.atomic():
-                # 1. Create Masters
+                # 1. Batch Create Masters
+                # Customers
+                existing_cust_map = {c.name.upper(): c for c in Customer.objects.all()}
+                needed_cust_names = {t['customer_name'] for t in parsed_trips if t['customer_name'].upper() not in existing_cust_map}
+                new_custs = [Customer(name=name, short_code=name[:10], code=name[:10]) for name in needed_cust_names]
+                if new_custs:
+                    Customer.objects.bulk_create(new_custs, batch_size=500)
+                customer_cache = {c.name.upper(): c for c in Customer.objects.all()}
+
+                # Transporters
+                existing_trans_map = {t.name.upper(): t for t in Transporter.objects.all()}
+                needed_trans_names = {t['transporter_name'] for t in parsed_trips if t['transporter_name'].upper() not in existing_trans_map}
+                new_trans = [Transporter(name=name, short_code=name[:10], code=name[:10]) for name in needed_trans_names]
+                if new_trans:
+                    Transporter.objects.bulk_create(new_trans, batch_size=500)
+                transporter_cache = {t.name.upper(): t for t in Transporter.objects.all()}
+
+                # Vehicles
+                existing_veh_map = {v.reg_no.upper(): v for v in Vehicle.objects.all()}
+                needed_vehs = {}
                 for t in parsed_trips:
-                    c_name = t['customer_name']
-                    c_key = c_name.upper()
-                    if c_key not in customer_cache:
-                        cust = Customer.objects.create(name=c_name, short_code=c_name[:10])
-                        customer_cache[c_key] = cust
+                    v_reg = t['vehicle_reg'].upper()
+                    if v_reg and v_reg not in existing_veh_map and v_reg not in needed_vehs:
+                        tr_obj = transporter_cache.get(t['transporter_name'].upper())
+                        needed_vehs[v_reg] = Vehicle(reg_no=t['vehicle_reg'], default_owner=tr_obj)
+                if needed_vehs:
+                    Vehicle.objects.bulk_create(list(needed_vehs.values()), batch_size=500)
+                vehicle_cache = {v.reg_no.upper(): v for v in Vehicle.objects.all()}
+                # Fallback vehicle if needed
+                fallback_veh = next(iter(vehicle_cache.values())) if vehicle_cache else None
 
-                    tr_name = t['transporter_name']
-                    tr_key = tr_name.upper()
-                    if tr_key not in transporter_cache:
-                        transp = Transporter.objects.create(name=tr_name, short_code=tr_name[:10])
-                        transporter_cache[tr_key] = transp
-
-                    v_reg = t['vehicle_reg']
-                    v_key = v_reg.upper()
-                    if v_key and v_key not in vehicle_cache:
-                        veh = Vehicle.objects.create(reg_no=v_reg, default_owner=transporter_cache[tr_key])
-                        vehicle_cache[v_key] = veh
-
-                    # Origin & Destination Locations
-                    orig_clean = t['origin'].split('+')[0].strip()
-                    dest_clean = t['destination'].split('+')[0].strip()
-                    for loc_str in (orig_clean, dest_clean):
-                        loc_key = loc_str.upper()
-                        if loc_key and loc_key not in location_cache:
-                            loc_obj = Location.objects.create(name=loc_str)
-                            location_cache[loc_key] = loc_obj
-
-                    # Lane
-                    if orig_clean and dest_clean:
-                        o_obj = location_cache.get(orig_clean.upper())
-                        d_obj = location_cache.get(dest_clean.upper())
-                        if o_obj and d_obj:
-                            lane_key = (o_obj.id, d_obj.id)
-                            if lane_key not in lane_cache:
-                                lane_obj, _ = Lane.objects.get_or_create(origin=o_obj, destination=d_obj)
-                                lane_cache[lane_key] = lane_obj
-
-                # 2. Upsert Trips
-                trip_db_map = {}
+                # Locations
+                existing_loc_map = {loc.name.upper(): loc for loc in Location.objects.all()}
+                needed_locs = set()
                 for t in parsed_trips:
-                    orig_clean = t['origin'].split('+')[0].strip()
-                    dest_clean = t['destination'].split('+')[0].strip()
-                    o_obj = location_cache.get(orig_clean.upper())
-                    d_obj = location_cache.get(dest_clean.upper())
+                    o = t['origin'].split('+')[0].strip()
+                    d = t['destination'].split('+')[0].strip()
+                    if o and o.upper() not in existing_loc_map:
+                        needed_locs.add(o)
+                    if d and d.upper() not in existing_loc_map:
+                        needed_locs.add(d)
+                if needed_locs:
+                    Location.objects.bulk_create([Location(name=l) for l in needed_locs], batch_size=500)
+                location_cache = {loc.name.upper(): loc for loc in Location.objects.all()}
+
+                # Lanes
+                existing_lane_keys = {(l.origin_id, l.destination_id): l for l in Lane.objects.all()}
+                needed_lanes = []
+                seen_lane_keys = set(existing_lane_keys.keys())
+                for t in parsed_trips:
+                    o = t['origin'].split('+')[0].strip()
+                    d = t['destination'].split('+')[0].strip()
+                    o_obj = location_cache.get(o.upper())
+                    d_obj = location_cache.get(d.upper())
+                    if o_obj and d_obj:
+                        k = (o_obj.id, d_obj.id)
+                        if k not in seen_lane_keys:
+                            needed_lanes.append(Lane(origin=o_obj, destination=d_obj, name=f"{o_obj.name} → {d_obj.name}"))
+                            seen_lane_keys.add(k)
+                if needed_lanes:
+                    Lane.objects.bulk_create(needed_lanes, batch_size=500)
+                lane_cache = {(l.origin_id, l.destination_id): l for l in Lane.objects.all()}
+
+                # 2. Batch Upsert Trips
+                existing_trips = {tr.lr_no: tr for tr in Trip.objects.all()}
+                trips_to_create = []
+                trips_to_update = []
+
+                for t in parsed_trips:
+                    lr = t['lr_no']
+                    o = t['origin'].split('+')[0].strip()
+                    d = t['destination'].split('+')[0].strip()
+                    o_obj = location_cache.get(o.upper())
+                    d_obj = location_cache.get(d.upper())
                     lane_obj = lane_cache.get((o_obj.id, d_obj.id)) if (o_obj and d_obj) else None
+                    veh_obj = vehicle_cache.get(t['vehicle_reg'].upper()) or fallback_veh
+                    cust_obj = customer_cache.get(t['customer_name'].upper())
+                    trans_obj = transporter_cache.get(t['transporter_name'].upper())
 
-                    trip, created = Trip.objects.update_or_create(
-                        lr_no=t['lr_no'],
-                        defaults={
-                            'booking_date': t['booking_date'],
-                            'vehicle': vehicle_cache.get(t['vehicle_reg'].upper()) or vehicle_cache.get(list(vehicle_cache.keys())[0]),
-                            'lorry_owner': transporter_cache[t['transporter_name'].upper()],
-                            'consignor': customer_cache[t['customer_name'].upper()],
-                            'lane': lane_obj,
-                            'origin': t['origin'],
-                            'destination': t['destination'],
-                            'freight': t['freight'],
-                            'advance': t['advance'],
-                            'commission': t['commission'],
-                            'lorry_advance': t['lorry_advance'],
-                            'tds': t['tds'],
-                            'advance_balance': t['advance_balance'],
-                            'balance': t['balance'],
-                            'labour': t['labour'],
-                            'holding_days': t['holding_days'],
-                            'holding_rate': t['holding_rate'],
-                            'holding': t['holding'],
-                            'total_balance': t['total_balance'],
-                            'memo_no': t['memo_no'],
-                            'memo_pending': t['memo_pending'],
-                            'memo_date': t['memo_date'],
-                            'unloading_date': t['unloading_date'],
-                            'balance_status': t['balance_status'],
-                            'balance_received_date': t['balance_received_date'],
-                            'lorry_balance_amount': t['lorry_balance_amount'],
-                            'remarks': t['remarks'],
-                            'is_cancelled': t['is_cancelled'],
-                            'financial_year': t['financial_year'],
-                            'source': Trip.Source.EXCEL_IMPORT,
-                            'raw_import': t['raw_row'],
-                        }
-                    )
-                    trip_db_map[t['lr_no']] = trip
-                    if created:
-                        created_trips_count += 1
+                    trip_data = {
+                        'booking_date': t['booking_date'],
+                        'vehicle': veh_obj,
+                        'lorry_owner': trans_obj,
+                        'consignor': cust_obj,
+                        'lane': lane_obj,
+                        'origin': t['origin'],
+                        'destination': t['destination'],
+                        'freight': t['freight'],
+                        'advance': t['advance'],
+                        'commission': t['commission'],
+                        'lorry_advance': t['lorry_advance'],
+                        'tds': t['tds'],
+                        'advance_balance': t['advance_balance'],
+                        'balance': t['balance'],
+                        'labour': t['labour'],
+                        'holding_days': t['holding_days'],
+                        'holding_rate': t['holding_rate'],
+                        'holding': t['holding'],
+                        'total_balance': t['total_balance'],
+                        'memo_no': t['memo_no'],
+                        'memo_pending': t['memo_pending'],
+                        'memo_date': t['memo_date'],
+                        'unloading_date': t['unloading_date'],
+                        'balance_status': t['balance_status'],
+                        'balance_received_date': t['balance_received_date'],
+                        'lorry_balance_amount': t['lorry_balance_amount'],
+                        'remarks': t['remarks'],
+                        'is_cancelled': t['is_cancelled'],
+                        'financial_year': t['financial_year'],
+                        'source': Trip.Source.EXCEL_IMPORT,
+                        'raw_import': t['raw_row'],
+                    }
+
+                    if lr in existing_trips:
+                        trip_instance = existing_trips[lr]
+                        for k, v in trip_data.items():
+                            setattr(trip_instance, k, v)
+                        trips_to_update.append(trip_instance)
                     else:
-                        updated_trips_count += 1
+                        trips_to_create.append(Trip(lr_no=lr, **trip_data))
 
-                # 3. Clean and Recreate Receipts & Allocations from Import
+                if trips_to_create:
+                    Trip.objects.bulk_create(trips_to_create, batch_size=500)
+                    created_trips_count = len(trips_to_create)
+                if trips_to_update:
+                    update_fields = [k for k in trip_data.keys()]
+                    Trip.objects.bulk_update(trips_to_update, fields=update_fields, batch_size=500)
+                    updated_trips_count = len(trips_to_update)
+
+                # Re-fetch trips map for allocation foreign keys
+                all_trips_map = {tr.lr_no: tr for tr in Trip.objects.all()}
+
+                # 3. Batch Receipts & Allocations
                 ReceiptAllocation.objects.filter(receipt__source=Trip.Source.EXCEL_IMPORT).delete()
                 Receipt.objects.filter(source=Trip.Source.EXCEL_IMPORT).delete()
 
-                # Process combined receipt groups
+                # Process combined receipts
                 processed_group_lrs = set()
+                receipts_to_create = []
+                alloc_specs = []  # (receipt_idx, trip_lr, amount)
+
                 for grp in consecutive_receipt_groups:
-                    cust_obj = customer_cache[grp[0]['key'][0]]
+                    cust_obj = customer_cache.get(grp[0]['key'][0])
                     comb_amount = grp[0]['key'][1]
                     comb_date = grp[0]['key'][2] or grp[0]['trip']['booking_date']
                     comb_ref = grp[0]['key'][3] or ''
 
-                    receipt = Receipt.objects.create(
+                    rcpt = Receipt(
                         consignor=cust_obj,
                         date=comb_date,
                         amount=comb_amount,
@@ -657,28 +702,24 @@ class Command(BaseCommand):
                         kind=Receipt.Kind.ADVANCE,
                         source=Trip.Source.EXCEL_IMPORT
                     )
-                    created_receipts_count += 1
+                    rcpt_idx = len(receipts_to_create)
+                    receipts_to_create.append(rcpt)
 
-                    # Allocate across LRs
                     remaining_pool = comb_amount
                     for item in grp:
-                        trip_item = trip_db_map[item['lr_no']]
-                        alloc_amt = min(trip_item.advance, remaining_pool)
-                        if alloc_amt > Decimal('0.00'):
-                            ReceiptAllocation.objects.create(
-                                receipt=receipt,
-                                trip=trip_item,
-                                amount=alloc_amt
-                            )
-                            remaining_pool -= alloc_amt
+                        trip_item = all_trips_map.get(item['lr_no'])
+                        if trip_item:
+                            alloc_amt = min(trip_item.advance, remaining_pool)
+                            if alloc_amt > Decimal('0.00'):
+                                alloc_specs.append((rcpt_idx, item['lr_no'], alloc_amt))
+                                remaining_pool -= alloc_amt
                         processed_group_lrs.add(item['lr_no'])
 
                 # Process individual receipts
                 for t in parsed_trips:
                     if t['lr_no'] not in processed_group_lrs and t['adv_recd'] > Decimal('0.00') and not t['is_cancelled']:
-                        trip_obj = trip_db_map[t['lr_no']]
-                        cust_obj = customer_cache[t['customer_name'].upper()]
-                        receipt = Receipt.objects.create(
+                        cust_obj = customer_cache.get(t['customer_name'].upper())
+                        rcpt = Receipt(
                             consignor=cust_obj,
                             date=t['recd_date'],
                             amount=t['adv_recd'],
@@ -687,35 +728,60 @@ class Command(BaseCommand):
                             kind=Receipt.Kind.ADVANCE,
                             source=Trip.Source.EXCEL_IMPORT
                         )
-                        created_receipts_count += 1
-                        ReceiptAllocation.objects.create(
-                            receipt=receipt,
-                            trip=trip_obj,
-                            amount=t['adv_recd']
-                        )
+                        rcpt_idx = len(receipts_to_create)
+                        receipts_to_create.append(rcpt)
+                        alloc_specs.append((rcpt_idx, t['lr_no'], t['adv_recd']))
 
-                # 4. Clean and Recreate Owner Payments from Import
+                if receipts_to_create:
+                    # bulk_create with returning primary keys
+                    created_rcpts = Receipt.objects.bulk_create(receipts_to_create, batch_size=500)
+                    created_receipts_count = len(created_rcpts)
+
+                    allocations_to_create = []
+                    for r_idx, lr_val, alloc_amt in alloc_specs:
+                        allocations_to_create.append(ReceiptAllocation(
+                            receipt=created_rcpts[r_idx],
+                            trip=all_trips_map[lr_val],
+                            amount=alloc_amt
+                        ))
+                    if allocations_to_create:
+                        ReceiptAllocation.objects.bulk_create(allocations_to_create, batch_size=500)
+
+                # 4. Batch Owner Payments & Allocations
                 OwnerPaymentAllocation.objects.filter(payment__source=Trip.Source.EXCEL_IMPORT).delete()
                 OwnerPayment.objects.filter(source=Trip.Source.EXCEL_IMPORT).delete()
 
+                payments_to_create = []
+                payment_specs = []  # (pmt_idx, trip_lr, amount)
+
                 for t in parsed_trips:
                     if t['lorry_balance_date'] and not t['is_cancelled']:
-                        trip_obj = trip_db_map[t['lr_no']]
-                        transp_obj = transporter_cache[t['transporter_name'].upper()]
-                        pmt_amt = t['lorry_balance_amount']  # may be None
-                        pmt = OwnerPayment.objects.create(
+                        transp_obj = transporter_cache.get(t['transporter_name'].upper())
+                        pmt_amt = t['lorry_balance_amount']
+                        pmt = OwnerPayment(
                             lorry_owner=transp_obj,
                             date=t['lorry_balance_date'],
                             amount=pmt_amt,
                             notes=f"Lorry balance settlement for LR {t['lr_no']}",
                             source=Trip.Source.EXCEL_IMPORT
                         )
-                        created_payments_count += 1
-                        OwnerPaymentAllocation.objects.create(
-                            payment=pmt,
-                            trip=trip_obj,
+                        p_idx = len(payments_to_create)
+                        payments_to_create.append(pmt)
+                        payment_specs.append((p_idx, t['lr_no'], pmt_amt))
+
+                if payments_to_create:
+                    created_pmts = OwnerPayment.objects.bulk_create(payments_to_create, batch_size=500)
+                    created_payments_count = len(created_pmts)
+
+                    pmt_allocs_to_create = []
+                    for p_idx, lr_val, pmt_amt in payment_specs:
+                        pmt_allocs_to_create.append(OwnerPaymentAllocation(
+                            payment=created_pmts[p_idx],
+                            trip=all_trips_map[lr_val],
                             amount=pmt_amt
-                        )
+                        ))
+                    if pmt_allocs_to_create:
+                        OwnerPaymentAllocation.objects.bulk_create(pmt_allocs_to_create, batch_size=500)
 
         # Print final console summary
         self.stdout.write(self.style.SUCCESS("\n" + "=" * 65))

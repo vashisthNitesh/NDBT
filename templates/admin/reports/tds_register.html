@@ -1,0 +1,123 @@
+{% extends "admin/base_site.html" %}
+{% load i18n indian_numbers %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-base-200 dark:border-base-800">
+        <div>
+            <h1 class="text-2xl font-bold text-base-900 dark:text-base-100 flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary-600">receipt_long</span>
+                Section 194C TDS Register
+            </h1>
+            <p class="text-sm text-base-500 dark:text-base-400 mt-1">
+                Transporter TDS deducted on freight contracts (1% individual / 2% company) grouped by PAN.
+            </p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="?fy={{ selected_fy }}&q={{ search_q }}&format=csv"
+               class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition">
+                <span class="material-symbols-outlined text-sm">download</span>
+                Download Excel / CSV
+            </a>
+            <button onclick="window.print()"
+               class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg border border-base-300 dark:border-base-700 bg-white dark:bg-base-800 text-base-700 dark:text-base-300 hover:bg-base-100 dark:hover:bg-base-700 transition">
+                <span class="material-symbols-outlined text-sm">print</span>
+                Print
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <form method="get" class="p-4 rounded-xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 shadow-sm flex flex-wrap items-center gap-4">
+        <div class="flex items-center gap-2">
+            <label class="text-xs font-medium text-base-600 dark:text-base-400">Financial Year:</label>
+            <select name="fy" onchange="this.form.submit()" class="text-xs rounded-lg border-base-300 dark:border-base-700 bg-base-50 dark:bg-base-800 text-base-900 dark:text-base-100 px-3 py-1.5 focus:ring-primary-500">
+                {% for y in all_fys %}
+                    <option value="{{ y }}" {% if selected_fy == y %}selected{% endif %}>FY {{ y }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="flex items-center gap-2 grow max-w-md">
+            <div class="relative w-full">
+                <span class="material-symbols-outlined absolute left-2.5 top-2 text-base-400 text-sm">search</span>
+                <input type="text" name="q" value="{{ search_q }}" placeholder="Search transporter name or PAN..."
+                       class="w-full text-xs pl-8 pr-3 py-1.5 rounded-lg border-base-300 dark:border-base-700 bg-base-50 dark:bg-base-800 text-base-900 dark:text-base-100 focus:ring-primary-500">
+            </div>
+            <button type="submit" class="px-3 py-1.5 rounded-lg bg-primary-600 text-white text-xs font-medium hover:bg-primary-700 transition">Filter</button>
+            {% if search_q %}
+                <a href="?fy={{ selected_fy }}" class="text-xs text-base-500 hover:underline">Clear</a>
+            {% endif %}
+        </div>
+
+        <div class="ml-auto text-xs text-base-500 dark:text-base-400 font-medium">
+            Total TDS Deducted in FY {{ selected_fy }}: <strong class="text-purple-600 dark:text-purple-400 font-bold">{{ tot_tds|indian_currency }}</strong>
+        </div>
+    </form>
+
+    <!-- Report Table -->
+    <div class="overflow-x-auto rounded-xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 shadow-sm">
+        <table class="w-full text-left border-collapse text-xs">
+            <thead>
+                <tr class="border-b border-base-200 dark:border-base-800 bg-base-50/80 dark:bg-base-800/50 text-base-600 dark:text-base-400 uppercase tracking-wider font-semibold">
+                    <th class="p-3">#</th>
+                    <th class="p-3">Transporter / Deductee</th>
+                    <th class="p-3">PAN Number</th>
+                    <th class="p-3 text-right">Trips Count</th>
+                    <th class="p-3 text-right">Total Freight Credited</th>
+                    <th class="p-3 text-right">TDS Deducted (194C)</th>
+                    <th class="p-3 text-center">Effective Rate</th>
+                    <th class="p-3 text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-base-100 dark:divide-base-800">
+                {% for row in rows %}
+                <tr class="hover:bg-base-50/60 dark:hover:bg-base-800/40 transition">
+                    <td class="p-3 text-base-400">{{ forloop.counter }}</td>
+                    <td class="p-3 font-semibold text-base-900 dark:text-base-100">
+                        {{ row.transporter.name }}
+                    </td>
+                    <td class="p-3 font-mono font-medium text-[11px] text-base-700 dark:text-base-300">
+                        {% if row.pan != 'NOT SPECIFIED' %}
+                            <span class="px-1.5 py-0.5 rounded bg-base-100 dark:bg-base-800">{{ row.pan }}</span>
+                        {% else %}
+                            <span class="text-amber-500 italic">No PAN on file</span>
+                        {% endif %}
+                    </td>
+                    <td class="p-3 text-right font-medium text-base-700 dark:text-base-300">{{ row.trip_count }}</td>
+                    <td class="p-3 text-right font-medium text-base-900 dark:text-base-100">{{ row.freight|indian_currency }}</td>
+                    <td class="p-3 text-right font-bold text-purple-600 dark:text-purple-400">{{ row.tds|indian_currency }}</td>
+                    <td class="p-3 text-center text-base-500 font-medium">
+                        {% if row.freight > 0 %}
+                            {% widthratio row.tds row.freight 100 as pct %}{{ pct }}%
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td class="p-3 text-center">
+                        <a href="{% url 'admin:register_trip_changelist' %}?lorry_owner__id__exact={{ row.transporter.id }}&financial_year={{ selected_fy }}"
+                           class="inline-flex items-center gap-1 text-[11px] font-medium text-primary-600 hover:text-primary-700 hover:underline">
+                            View Trips <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="p-8 text-center text-base-400">No TDS records for FY {{ selected_fy }}.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="border-t-2 border-base-300 dark:border-base-700 bg-base-50 dark:bg-base-800/80 font-bold text-base-900 dark:text-base-100">
+                    <td colspan="3" class="p-3">TOTAL ({{ rows|length }} Deductees)</td>
+                    <td class="p-3 text-right">{{ tot_trips }}</td>
+                    <td class="p-3 text-right">{{ tot_freight|indian_currency }}</td>
+                    <td class="p-3 text-right text-purple-600 dark:text-purple-400">{{ tot_tds|indian_currency }}</td>
+                    <td colspan="2"></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+{% endblock %}

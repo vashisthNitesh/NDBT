@@ -1,0 +1,122 @@
+{% extends "admin/base_site.html" %}
+{% load i18n indian_numbers %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-base-200 dark:border-base-800">
+        <div>
+            <h1 class="text-2xl font-bold text-base-900 dark:text-base-100 flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary-600">request_quote</span>
+                Transporter (Lorry Owner) Payable
+            </h1>
+            <p class="text-sm text-base-500 dark:text-base-400 mt-1">
+                Lorry advance, agreed settlement balances, paid amounts, and net owner payable.
+            </p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="?fy={{ selected_fy }}&q={{ search_q }}&format=csv"
+               class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition">
+                <span class="material-symbols-outlined text-sm">download</span>
+                Download Excel / CSV
+            </a>
+            <button onclick="window.print()"
+               class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg border border-base-300 dark:border-base-700 bg-white dark:bg-base-800 text-base-700 dark:text-base-300 hover:bg-base-100 dark:hover:bg-base-700 transition">
+                <span class="material-symbols-outlined text-sm">print</span>
+                Print
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <form method="get" class="p-4 rounded-xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 shadow-sm flex flex-wrap items-center gap-4">
+        <div class="flex items-center gap-2">
+            <label class="text-xs font-medium text-base-600 dark:text-base-400">Financial Year:</label>
+            <select name="fy" onchange="this.form.submit()" class="text-xs rounded-lg border-base-300 dark:border-base-700 bg-base-50 dark:bg-base-800 text-base-900 dark:text-base-100 px-3 py-1.5 focus:ring-primary-500">
+                <option value="">All Financial Years</option>
+                {% for y in all_fys %}
+                    <option value="{{ y }}" {% if selected_fy == y %}selected{% endif %}>FY {{ y }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="flex items-center gap-2 grow max-w-md">
+            <div class="relative w-full">
+                <span class="material-symbols-outlined absolute left-2.5 top-2 text-base-400 text-sm">search</span>
+                <input type="text" name="q" value="{{ search_q }}" placeholder="Search by transporter name, code, or PAN..."
+                       class="w-full text-xs pl-8 pr-3 py-1.5 rounded-lg border-base-300 dark:border-base-700 bg-base-50 dark:bg-base-800 text-base-900 dark:text-base-100 focus:ring-primary-500">
+            </div>
+            <button type="submit" class="px-3 py-1.5 rounded-lg bg-primary-600 text-white text-xs font-medium hover:bg-primary-700 transition">Filter</button>
+            {% if search_q or selected_fy %}
+                <a href="?" class="text-xs text-base-500 hover:underline">Clear</a>
+            {% endif %}
+        </div>
+
+        <div class="ml-auto text-xs text-base-500 dark:text-base-400 font-medium">
+            Showing <strong class="text-base-900 dark:text-base-100">{{ report_data|length }}</strong> Transporters
+        </div>
+    </form>
+
+    <!-- Report Table -->
+    <div class="overflow-x-auto rounded-xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 shadow-sm">
+        <table class="w-full text-left border-collapse text-xs">
+            <thead>
+                <tr class="border-b border-base-200 dark:border-base-800 bg-base-50/80 dark:bg-base-800/50 text-base-600 dark:text-base-400 uppercase tracking-wider font-semibold">
+                    <th class="p-3">Transporter / Lorry Owner</th>
+                    <th class="p-3">PAN</th>
+                    <th class="p-3 text-right">Trips</th>
+                    <th class="p-3 text-right">Lorry Advance</th>
+                    <th class="p-3 text-right">Adv. Balance</th>
+                    <th class="p-3 text-right">Lorry Balance</th>
+                    <th class="p-3 text-right">Amount Paid</th>
+                    <th class="p-3 text-right">Net Payable</th>
+                    <th class="p-3 text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-base-100 dark:divide-base-800">
+                {% for row in report_data %}
+                <tr class="hover:bg-base-50/60 dark:hover:bg-base-800/40 transition">
+                    <td class="p-3 font-semibold text-base-900 dark:text-base-100">
+                        <div class="flex items-center gap-2">
+                            <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono bg-base-100 dark:bg-base-800 text-base-600 dark:text-base-300">
+                                {{ row.transporter.code|default:"VEN" }}
+                            </span>
+                            <span>{{ row.transporter.name }}</span>
+                        </div>
+                    </td>
+                    <td class="p-3 font-mono text-[11px] text-base-500 dark:text-base-400">{{ row.transporter.pan|default:"-" }}</td>
+                    <td class="p-3 text-right font-medium text-base-700 dark:text-base-300">{{ row.trip_count }}</td>
+                    <td class="p-3 text-right font-medium text-base-900 dark:text-base-100">{{ row.lorry_advance|indian_currency }}</td>
+                    <td class="p-3 text-right font-medium text-base-900 dark:text-base-100">{{ row.adv_balance|indian_currency }}</td>
+                    <td class="p-3 text-right font-medium text-base-900 dark:text-base-100">{{ row.lorry_balance|indian_currency }}</td>
+                    <td class="p-3 text-right font-medium text-emerald-600 dark:text-emerald-400">{{ row.paid|indian_currency }}</td>
+                    <td class="p-3 text-right font-bold text-rose-600 dark:text-rose-400">{{ row.net_due|indian_currency }}</td>
+                    <td class="p-3 text-center">
+                        <a href="{% url 'admin:register_trip_changelist' %}?lorry_owner__id__exact={{ row.transporter.id }}"
+                           class="inline-flex items-center gap-1 text-[11px] font-medium text-primary-600 hover:text-primary-700 hover:underline">
+                            View Trips <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="p-8 text-center text-base-400">No transporter records matching your filter criteria.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="border-t-2 border-base-300 dark:border-base-700 bg-base-50 dark:bg-base-800/80 font-bold text-base-900 dark:text-base-100">
+                    <td colspan="2" class="p-3">TOTAL ({{ report_data|length }} Transporters)</td>
+                    <td class="p-3 text-right">{{ tot_trips }}</td>
+                    <td class="p-3 text-right">{{ tot_lorry_adv|indian_currency }}</td>
+                    <td class="p-3 text-right">{{ tot_adv_bal|indian_currency }}</td>
+                    <td class="p-3 text-right">{{ tot_lorry_bal|indian_currency }}</td>
+                    <td class="p-3 text-right text-emerald-600 dark:text-emerald-400">{{ tot_paid|indian_currency }}</td>
+                    <td class="p-3 text-right text-rose-600 dark:text-rose-400">{{ tot_net_due|indian_currency }}</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+{% endblock %}

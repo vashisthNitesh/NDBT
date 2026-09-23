@@ -1,0 +1,113 @@
+{% extends "admin/base_site.html" %}
+{% load i18n indian_numbers %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-base-200 dark:border-base-800">
+        <div>
+            <h1 class="text-2xl font-bold text-base-900 dark:text-base-100 flex items-center gap-2">
+                <span class="material-symbols-outlined text-amber-500">warning</span>
+                Pending Operations & Action Items
+            </h1>
+            <p class="text-sm text-base-500 dark:text-base-400 mt-1">
+                Daily operational task backlog: missing memos, unsubmitted POD documents, and overdue balance collections.
+            </p>
+        </div>
+        <div>
+            <button onclick="window.print()"
+               class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg border border-base-300 dark:border-base-700 bg-white dark:bg-base-800 text-base-700 dark:text-base-300 hover:bg-base-100 dark:hover:bg-base-700 transition">
+                <span class="material-symbols-outlined text-sm">print</span>
+                Print List
+            </button>
+        </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="flex border-b border-base-200 dark:border-base-800 gap-2">
+        <a href="?tab=memo"
+           class="px-4 py-2.5 text-xs font-bold border-b-2 transition flex items-center gap-2 {% if tab == 'memo' %}border-primary-600 text-primary-600 dark:text-primary-400{% else %}border-transparent text-base-500 hover:text-base-700 hover:border-base-300{% endif %}">
+            <span class="material-symbols-outlined text-sm">note_stack</span>
+            Memos Pending
+            <span class="px-2 py-0.5 rounded-full text-[10px] bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-semibold">
+                {{ counts.memo }}
+            </span>
+        </a>
+
+        <a href="?tab=pod"
+           class="px-4 py-2.5 text-xs font-bold border-b-2 transition flex items-center gap-2 {% if tab == 'pod' %}border-primary-600 text-primary-600 dark:text-primary-400{% else %}border-transparent text-base-500 hover:text-base-700 hover:border-base-300{% endif %}">
+            <span class="material-symbols-outlined text-sm">receipt</span>
+            POD Documents Missing
+            <span class="px-2 py-0.5 rounded-full text-[10px] bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 font-semibold">
+                {{ counts.pod }}
+            </span>
+        </a>
+
+        <a href="?tab=settlement"
+           class="px-4 py-2.5 text-xs font-bold border-b-2 transition flex items-center gap-2 {% if tab == 'settlement' %}border-primary-600 text-primary-600 dark:text-primary-400{% else %}border-transparent text-base-500 hover:text-base-700 hover:border-base-300{% endif %}">
+            <span class="material-symbols-outlined text-sm">hourglass_bottom</span>
+            Unloaded > 7 Days (Balance Due)
+            <span class="px-2 py-0.5 rounded-full text-[10px] bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 font-semibold">
+                {{ counts.settlement }}
+            </span>
+        </a>
+    </div>
+
+    <!-- Active Tab Description -->
+    <div class="flex items-center justify-between text-xs text-base-500 dark:text-base-400 px-1">
+        <span>Showing up to 150 most recent records for <strong>{{ tab_title }}</strong></span>
+        <span>Click on any LR number to open and update</span>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto rounded-xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 shadow-sm">
+        <table class="w-full text-left border-collapse text-xs">
+            <thead>
+                <tr class="border-b border-base-200 dark:border-base-800 bg-base-50/80 dark:bg-base-800/50 text-base-600 dark:text-base-400 uppercase tracking-wider font-semibold">
+                    <th class="p-3">LR No.</th>
+                    <th class="p-3">Booking Date</th>
+                    <th class="p-3">Vehicle</th>
+                    <th class="p-3">Lorry Owner</th>
+                    <th class="p-3">Customer (Consignor)</th>
+                    <th class="p-3">Route</th>
+                    <th class="p-3 text-right">Freight</th>
+                    <th class="p-3 text-right">Balance Due</th>
+                    {% if tab == 'settlement' %}
+                        <th class="p-3 text-center">Unloaded Date</th>
+                    {% endif %}
+                    <th class="p-3 text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-base-100 dark:divide-base-800">
+                {% for trip in trips %}
+                <tr class="hover:bg-base-50/60 dark:hover:bg-base-800/40 transition">
+                    <td class="p-3 font-bold text-primary-600 hover:underline">
+                        <a href="{% url 'admin:register_trip_change' trip.id %}">#{{ trip.lr_no }}</a>
+                    </td>
+                    <td class="p-3 text-base-600 dark:text-base-300">{{ trip.booking_date|date:"d M Y" }}</td>
+                    <td class="p-3 font-mono font-medium text-base-800 dark:text-base-200">{{ trip.vehicle.reg_no }}</td>
+                    <td class="p-3 text-base-700 dark:text-base-300">{{ trip.lorry_owner.name|truncatechars:20 }}</td>
+                    <td class="p-3 text-base-700 dark:text-base-300 font-medium">{{ trip.consignor.name|truncatechars:22 }}</td>
+                    <td class="p-3 text-base-500 dark:text-base-400">{{ trip.origin }} → {{ trip.destination }}</td>
+                    <td class="p-3 text-right font-medium text-base-900 dark:text-base-100">{{ trip.freight|indian_currency }}</td>
+                    <td class="p-3 text-right font-bold text-rose-600 dark:text-rose-400">{{ trip.total_balance|indian_currency }}</td>
+                    {% if tab == 'settlement' %}
+                        <td class="p-3 text-center text-amber-600 font-medium">{{ trip.unloading_date|date:"d M Y"|default:"-" }}</td>
+                    {% endif %}
+                    <td class="p-3 text-center">
+                        <a href="{% url 'admin:register_trip_change' trip.id %}"
+                           class="inline-flex items-center px-2.5 py-1 rounded bg-base-100 dark:bg-base-800 hover:bg-base-200 dark:hover:bg-base-700 text-base-700 dark:text-base-300 text-[11px] font-semibold transition">
+                            Update
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" class="p-8 text-center text-base-400">All clear! No pending items found in this section.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

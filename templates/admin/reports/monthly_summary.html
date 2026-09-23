@@ -1,0 +1,100 @@
+{% extends "admin/base_site.html" %}
+{% load i18n indian_numbers %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-base-200 dark:border-base-800">
+        <div>
+            <h1 class="text-2xl font-bold text-base-900 dark:text-base-100 flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary-600">analytics</span>
+                Monthly Business Summary
+            </h1>
+            <p class="text-sm text-base-500 dark:text-base-400 mt-1">
+                Month-by-month freight volume, commission income, advance receipts, and balances.
+            </p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="?fy={{ selected_fy }}&format=csv"
+               class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition">
+                <span class="material-symbols-outlined text-sm">download</span>
+                Download Excel / CSV
+            </a>
+            <button onclick="window.print()"
+               class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg border border-base-300 dark:border-base-700 bg-white dark:bg-base-800 text-base-700 dark:text-base-300 hover:bg-base-100 dark:hover:bg-base-700 transition">
+                <span class="material-symbols-outlined text-sm">print</span>
+                Print
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <form method="get" class="p-4 rounded-xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 shadow-sm flex flex-wrap items-center gap-4">
+        <div class="flex items-center gap-2">
+            <label class="text-xs font-medium text-base-600 dark:text-base-400">Filter Financial Year:</label>
+            <select name="fy" onchange="this.form.submit()" class="text-xs rounded-lg border-base-300 dark:border-base-700 bg-base-50 dark:bg-base-800 text-base-900 dark:text-base-100 px-3 py-1.5 focus:ring-primary-500">
+                <option value="">All Financial Years</option>
+                {% for y in all_fys %}
+                    <option value="{{ y }}" {% if selected_fy == y %}selected{% endif %}>FY {{ y }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="ml-auto text-xs text-base-500 dark:text-base-400 font-medium">
+            Total Commission Earned: <strong class="text-blue-600 dark:text-blue-400 font-bold">{{ tot_commission|indian_currency }}</strong>
+        </div>
+    </form>
+
+    <!-- Report Table -->
+    <div class="overflow-x-auto rounded-xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 shadow-sm">
+        <table class="w-full text-left border-collapse text-xs">
+            <thead>
+                <tr class="border-b border-base-200 dark:border-base-800 bg-base-50/80 dark:bg-base-800/50 text-base-600 dark:text-base-400 uppercase tracking-wider font-semibold">
+                    <th class="p-3">Month</th>
+                    <th class="p-3 text-right">Trips</th>
+                    <th class="p-3 text-right">Freight Volume</th>
+                    <th class="p-3 text-right">Party Advance</th>
+                    <th class="p-3 text-right">Commission Income</th>
+                    <th class="p-3 text-right">TDS Deducted</th>
+                    <th class="p-3 text-right">Labour Charges</th>
+                    <th class="p-3 text-right">Detention</th>
+                    <th class="p-3 text-right">Total Balance</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-base-100 dark:divide-base-800">
+                {% for row in monthly_data %}
+                <tr class="hover:bg-base-50/60 dark:hover:bg-base-800/40 transition">
+                    <td class="p-3 font-bold text-base-900 dark:text-base-100">
+                        {{ row.month|date:"F Y" }}
+                    </td>
+                    <td class="p-3 text-right font-medium text-base-700 dark:text-base-300">{{ row.trip_count }}</td>
+                    <td class="p-3 text-right font-medium text-base-900 dark:text-base-100">{{ row.freight|indian_currency }}</td>
+                    <td class="p-3 text-right text-amber-600 dark:text-amber-400 font-medium">{{ row.advance|indian_currency }}</td>
+                    <td class="p-3 text-right font-bold text-blue-600 dark:text-blue-400">{{ row.commission|indian_currency }}</td>
+                    <td class="p-3 text-right text-purple-600 dark:text-purple-400 font-medium">{{ row.tds|indian_currency }}</td>
+                    <td class="p-3 text-right text-base-600 dark:text-base-400">{{ row.labour|indian_currency }}</td>
+                    <td class="p-3 text-right text-base-600 dark:text-base-400">{{ row.holding|indian_currency }}</td>
+                    <td class="p-3 text-right font-bold text-rose-600 dark:text-rose-400">{{ row.balance|indian_currency }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="p-8 text-center text-base-400">No monthly records available for this selection.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="border-t-2 border-base-300 dark:border-base-700 bg-base-50 dark:bg-base-800/80 font-bold text-base-900 dark:text-base-100">
+                    <td class="p-3">TOTAL</td>
+                    <td class="p-3 text-right">{{ tot_trips }}</td>
+                    <td class="p-3 text-right">{{ tot_freight|indian_currency }}</td>
+                    <td class="p-3 text-right text-amber-600 dark:text-amber-400">{{ tot_advance|indian_currency }}</td>
+                    <td class="p-3 text-right text-blue-600 dark:text-blue-400">{{ tot_commission|indian_currency }}</td>
+                    <td class="p-3 text-right text-purple-600 dark:text-purple-400">{{ tot_tds|indian_currency }}</td>
+                    <td colspan="2"></td>
+                    <td class="p-3 text-right text-rose-600 dark:text-rose-400">{{ tot_balance|indian_currency }}</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+{% endblock %}

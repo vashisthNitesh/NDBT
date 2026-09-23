@@ -124,7 +124,7 @@ STORAGES = {
         'BACKEND': 'django.core.files.storage.FileSystemStorage',
     },
     'staticfiles': {
-        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage' if not ('test' in sys.argv or DEBUG) else 'django.contrib.staticfiles.storage.StaticFilesStorage',
     },
 }
 
@@ -135,12 +135,136 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Django Unfold Configuration
+from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
+
 UNFOLD = {
     'SITE_TITLE': 'NDBT Lorry Register',
-    'SITE_HEADER': 'NDBT Lorry Register Portal',
+    'SITE_HEADER': 'NDBT Transport Portal',
     'SITE_SYMBOL': 'local_shipping',
     'SHOW_HISTORY': True,
     'SHOW_VIEW_ON_SITE': False,
     'THEME': 'light',
-    'BORDER_RADIUS': '6px',
+    'BORDER_RADIUS': '8px',
+    'DASHBOARD_CALLBACK': 'register.views.dashboard_callback',
+    'SIDEBAR': {
+        'show_search': True,
+        'show_all_applications': False,
+        'navigation': [
+            {
+                'title': _('Operations'),
+                'separator': True,
+                'collapsible': False,
+                'items': [
+                    {
+                        'title': _('Trip Register (LR)'),
+                        'icon': 'local_shipping',
+                        'link': reverse_lazy('admin:register_trip_changelist'),
+                    },
+                    {
+                        'title': _('Customer Receipts'),
+                        'icon': 'payments',
+                        'link': reverse_lazy('admin:register_receipt_changelist'),
+                    },
+                    {
+                        'title': _('Owner Payments'),
+                        'icon': 'account_balance_wallet',
+                        'link': reverse_lazy('admin:register_ownerpayment_changelist'),
+                    },
+                    {
+                        'title': _('Documents & POD'),
+                        'icon': 'description',
+                        'link': reverse_lazy('admin:register_tripdocument_changelist'),
+                    },
+                ],
+            },
+            {
+                'title': _('Reports & Analytics'),
+                'separator': True,
+                'collapsible': False,
+                'items': [
+                    {
+                        'title': _('Party Outstanding'),
+                        'icon': 'pending_actions',
+                        'link': reverse_lazy('admin:customer_outstanding_report'),
+                    },
+                    {
+                        'title': _('Transporter Payable'),
+                        'icon': 'request_quote',
+                        'link': reverse_lazy('admin:transporter_payable_report'),
+                    },
+                    {
+                        'title': _('TDS Register (194C)'),
+                        'icon': 'receipt_long',
+                        'link': reverse_lazy('admin:tds_register_report'),
+                    },
+                    {
+                        'title': _('Monthly Summary'),
+                        'icon': 'analytics',
+                        'link': reverse_lazy('admin:monthly_summary_report'),
+                    },
+                    {
+                        'title': _('Pending Operations'),
+                        'icon': 'warning',
+                        'link': reverse_lazy('admin:pending_work_report'),
+                    },
+                ],
+            },
+            {
+                'title': _('Master Data'),
+                'separator': True,
+                'collapsible': True,
+                'items': [
+                    {
+                        'title': _('Customers (Consignors)'),
+                        'icon': 'business',
+                        'link': reverse_lazy('admin:register_customer_changelist'),
+                    },
+                    {
+                        'title': _('Transporters (Owners)'),
+                        'icon': 'directions_bus',
+                        'link': reverse_lazy('admin:register_transporter_changelist'),
+                    },
+                    {
+                        'title': _('Vehicles (Lorries)'),
+                        'icon': 'rv_hookup',
+                        'link': reverse_lazy('admin:register_vehicle_changelist'),
+                    },
+                    {
+                        'title': _('Vehicle Types'),
+                        'icon': 'category',
+                        'link': reverse_lazy('admin:register_vehicletype_changelist'),
+                    },
+                    {
+                        'title': _('Locations / Hubs'),
+                        'icon': 'location_on',
+                        'link': reverse_lazy('admin:register_location_changelist'),
+                    },
+                    {
+                        'title': _('Lanes / Routes'),
+                        'icon': 'alt_route',
+                        'link': reverse_lazy('admin:register_lane_changelist'),
+                    },
+                ],
+            },
+            {
+                'title': _('Administration'),
+                'separator': True,
+                'collapsible': True,
+                'items': [
+                    {
+                        'title': _('User Accounts'),
+                        'icon': 'person',
+                        'link': reverse_lazy('admin:auth_user_changelist'),
+                    },
+                    {
+                        'title': _('User Groups & Roles'),
+                        'icon': 'group',
+                        'link': reverse_lazy('admin:auth_group_changelist'),
+                    },
+                ],
+            },
+        ],
+    },
 }
+
