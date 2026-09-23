@@ -148,8 +148,9 @@ class TripReceiptAllocationInline(TabularInline):
     readonly_fields = ('receipt_link', 'receipt_date', 'amount')
     extra = 0
     can_delete = False
+    tab = True
     verbose_name = "Linked Customer Receipt"
-    verbose_name_plural = "Linked Customer Receipts (Inward Payments)"
+    verbose_name_plural = "Linked Customer Receipts"
 
     def has_add_permission(self, request, obj=None):
         return False
@@ -206,8 +207,9 @@ class TripOwnerPaymentAllocationInline(TabularInline):
     readonly_fields = ('payment_link', 'payment_date', 'amount')
     extra = 0
     can_delete = False
+    tab = True
     verbose_name = "Linked Owner Payment"
-    verbose_name_plural = "Linked Owner Payments (Outward Settlement)"
+    verbose_name_plural = "Linked Owner Payments"
 
     def has_add_permission(self, request, obj=None):
         return False
@@ -260,6 +262,9 @@ class TripDocumentInline(TabularInline):
     model = TripDocument
     form = TripDocumentForm
     extra = 1
+    tab = True
+    verbose_name = "Trip Document / POD"
+    verbose_name_plural = "Trip Documents & PODs"
     readonly_fields = ('uploaded_at', 'file_preview')
 
     @display(description="Preview")
@@ -372,37 +377,35 @@ class TripAdmin(ModelAdmin, ExportMixin):
     readonly_fields = ('advance_balance', 'balance', 'total_balance', 'financial_year', 'created_at', 'updated_at')
     inlines = [TripReceiptAllocationInline, TripOwnerPaymentAllocationInline, TripDocumentInline]
 
+    list_per_page = 50
+
     fieldsets = (
-        ('1. Booking Information', {
+        ('1. Booking & Logistics', {
+            'classes': ('tab',),
             'fields': (
                 ('booking_date', 'lr_no'),
-                ('vehicle', 'lorry_owner'),
-                ('consignor', 'lane'),
+                ('consignor', 'vehicle'),
+                ('lorry_owner', 'lane'),
                 ('origin', 'destination'),
             ),
         }),
-        ('2. Freight & Advance (Party)', {
+        ('2. Financial Ledger & Calculations', {
+            'classes': ('tab',),
             'fields': (
                 ('freight', 'advance'),
+                ('commission', 'lorry_advance'),
+                ('tds', 'advance_balance'),
+                ('labour', 'holding'),
+                ('holding_days', 'holding_rate'),
+                ('balance', 'total_balance'),
                 ('financial_year',),
             ),
         }),
-        ('3. Deductions & Loading Advance', {
+        ('3. Settlement & Milestones', {
+            'classes': ('tab',),
             'fields': (
-                ('commission', 'lorry_advance', 'tds'),
-                ('advance_balance',),
-            ),
-        }),
-        ('4. Memo, Unloading & Detention', {
-            'fields': (
-                ('memo_no', 'memo_pending', 'memo_date'),
-                ('unloading_date', 'labour'),
-                ('holding_days', 'holding_rate', 'holding'),
-                ('balance', 'total_balance'),
-            ),
-        }),
-        ('5. Settlement & Audit', {
-            'fields': (
+                ('memo_no', 'memo_date'),
+                ('memo_pending', 'unloading_date'),
                 ('balance_status', 'balance_received_date'),
                 ('lorry_balance_amount', 'is_cancelled'),
                 ('remarks',),

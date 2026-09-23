@@ -22,83 +22,129 @@ def dashboard_callback(request, context):
     today = timezone.localdate()
     current_fy = get_financial_year(today)
 
-    # Core High-Level KPIs
-    total_trips = Trip.objects.count()
-    active_vehicles = Vehicle.objects.filter(is_active=True).count()
-    active_customers = Customer.objects.filter(is_active=True).count()
+    # Available FY list for switching
+    available_fys = ['2026-27', '2025-26', '2024-25', '2023-24', '2022-23', '2021-22']
+    selected_fy = request.GET.get('fy', 'ALL')
+    if selected_fy not in available_fys and selected_fy != 'ALL':
+        selected_fy = 'ALL'
 
-    # This Month Metrics
-    this_month_start = today.replace(day=1)
-    month_trips = Trip.objects.filter(booking_date__gte=this_month_start)
-    month_trips_count = month_trips.count()
-    month_freight = month_trips.aggregate(s=Sum('freight'))['s'] or Decimal('0.00')
+    # Filter base queryset according to FY
+    if selected_fy != 'ALL':
+        trips_qs = Trip.objects.filter(financial_year=selected_fy)
+    else:
+        trips_qs = Trip.objects.all()
 
-    # Financial Year Totals
-    fy_trips = Trip.objects.filter(financial_year=current_fy)
-    fy_trips_count = fy_trips.count()
-    fy_freight = fy_trips.aggregate(s=Sum('freight'))['s'] or Decimal('0.00')
-
-    # All-Time Financial Totals
-    aggregates = Trip.objects.aggregate(
+    # Core High-Level Aggregates in a single database round-trip
+    aggregates = trips_qs.aggregate(
+        total_trips=Count('id'),
         total_freight=Sum('freight'),
         total_advance=Sum('advance'),
         total_commission=Sum('commission'),
         total_tds=Sum('tds'),
         total_balance=Sum('total_balance'),
+        total_holding=Sum('holding'),
+        total_labour=Sum('labour'),
+        active_vehicles=Count('vehicle', distinct=True),
+        active_customers=Count('consignor', distinct=True),
     )
 
+    total_trips = aggregates['total_trips'] or 0
     total_freight = aggregates['total_freight'] or Decimal('0.00')
-    total_party_balance = aggregates['total_balance'] or Decimal('0.00')
+    total_advance = aggregates['total_advance'] or Decimal('0.00')
     total_commission = aggregates['total_commission'] or Decimal('0.00')
+    total_tds = aggregates['total_tds'] or Decimal('0.00')
+    total_party_balance = aggregates['total_balance'] or Decimal('0.00')
+    total_extra_charges = (aggregates['total_holding'] or Decimal('0.00')) + (aggregates['total_labour'] or Decimal('0.00'))
+    avg_freight = (total_freight / total_trips) if total_trips > 0 else Decimal('0.00')
+
+    active_vehicles = aggregates['active_vehicles'] or 0
+    active_customers = aggregates['active_customers'] or 0
+
+    # Settlement Health Breakdown
+    status_counts = dict(trips_qs.values_list('balance_status').annotate(c=Count('id')))
+    count_received = status_counts.get(Trip.BalanceStatus.RECEIVED, 0)
+    count_pending = status_counts.get(Trip.BalanceStatus.PENDING, 0)
+    count_nil = status_counts.get(Trip.BalanceStatus.NIL, 0)
+    count_not_received = status_counts.get(Trip.BalanceStatus.NOT_RECEIVED, 0)
+    count_to_pay = status_counts.get(Trip.BalanceStatus.TO_PAY, 0)
+
+    pct_received = round((count_received / total_trips * 100), 1) if total_trips > 0 else 0
+    pct_pending = round((count_pending / total_trips * 100), 1) if total_trips > 0 else 0
+    pct_nil = round((count_nil / total_trips * 100), 1) if total_trips > 0 else 0
+    pct_not_received = round((count_not_received / total_trips * 100), 1) if total_trips > 0 else 0
+    pct_to_pay = round((count_to_pay / total_trips * 100), 1) if total_trips > 0 else 0
 
     # Operational Backlog / Attention Items
-    pending_memos = Trip.objects.filter(memo_pending=True).count()
-    missing_pods = Trip.objects.filter(has_pod=False, is_cancelled=False).count()
-    not_received_balance = Trip.objects.filter(balance_status=Trip.BalanceStatus.NOT_RECEIVED).count()
+    pending_memos = trips_qs.filter(memo_pending=True).count()
+    missing_pods = trips_qs.filter(has_pod=False, is_cancelled=False).count()
+
+    # Top 5 Transit Corridors (Lanes)
+    top_lanes = list(
+        trips_qs.exclude(lane__isnull=True)
+        .values('lane__name')
+        .annotate(
+            trip_count=Count('id'),
+            lane_freight=Coalesce(Sum('freight'), Value(Decimal('0.00')), output_field=DecimalField()),
+        )
+        .order_by('-trip_count')[:5]
+    )
 
     # Top Customers by Trips & Balance
-    top_customers = (
-        Customer.objects.filter(is_active=True)
+    top_customers = list(
+        trips_qs.values('consignor__name')
         .annotate(
-            trip_count=Count('trips'),
-            pending_balance=Coalesce(Sum('trips__total_balance'), Value(Decimal('0.00')), output_field=DecimalField()),
-            total_billed=Coalesce(Sum('trips__freight'), Value(Decimal('0.00')), output_field=DecimalField()),
+            trip_count=Count('id'),
+            pending_balance=Coalesce(Sum('total_balance'), Value(Decimal('0.00')), output_field=DecimalField()),
+            total_billed=Coalesce(Sum('freight'), Value(Decimal('0.00')), output_field=DecimalField()),
         )
-        .order_by('-trip_count')[:6]
+        .order_by('-trip_count')[:5]
     )
 
     # Top Transporters by Trips
-    top_transporters = (
-        Transporter.objects.filter(is_active=True)
+    top_transporters = list(
+        trips_qs.values('lorry_owner__name', 'lorry_owner__pan')
         .annotate(
-            trip_count=Count('trips'),
-            total_freight=Coalesce(Sum('trips__freight'), Value(Decimal('0.00')), output_field=DecimalField()),
-            total_tds=Coalesce(Sum('trips__tds'), Value(Decimal('0.00')), output_field=DecimalField()),
+            trip_count=Count('id'),
+            total_freight=Coalesce(Sum('freight'), Value(Decimal('0.00')), output_field=DecimalField()),
+            total_tds=Coalesce(Sum('tds'), Value(Decimal('0.00')), output_field=DecimalField()),
         )
-        .order_by('-trip_count')[:6]
+        .order_by('-trip_count')[:5]
     )
 
     # Recent 8 Trips
     recent_trips = (
-        Trip.objects.select_related('consignor', 'lorry_owner', 'vehicle')
+        trips_qs.select_related('consignor', 'lorry_owner', 'vehicle')
         .order_by('-booking_date', '-lr_no')[:8]
     )
 
     context.update({
         'current_fy': current_fy,
+        'selected_fy': selected_fy,
+        'available_fys': available_fys,
         'kpi_total_trips': total_trips,
         'kpi_total_freight': total_freight,
         'kpi_party_balance': total_party_balance,
+        'kpi_total_advance': total_advance,
         'kpi_total_commission': total_commission,
+        'kpi_total_tds': total_tds,
+        'kpi_total_extra_charges': total_extra_charges,
+        'kpi_avg_freight': avg_freight,
         'kpi_active_vehicles': active_vehicles,
         'kpi_active_customers': active_customers,
-        'kpi_month_trips_count': month_trips_count,
-        'kpi_month_freight': month_freight,
-        'kpi_fy_trips_count': fy_trips_count,
-        'kpi_fy_freight': fy_freight,
         'kpi_pending_memos': pending_memos,
         'kpi_missing_pods': missing_pods,
-        'kpi_not_received_balance': not_received_balance,
+        'kpi_not_received_balance': count_not_received,
+        'count_received': count_received,
+        'count_pending': count_pending,
+        'count_nil': count_nil,
+        'count_not_received': count_not_received,
+        'count_to_pay': count_to_pay,
+        'pct_received': pct_received,
+        'pct_pending': pct_pending,
+        'pct_nil': pct_nil,
+        'pct_not_received': pct_not_received,
+        'pct_to_pay': pct_to_pay,
+        'top_lanes': top_lanes,
         'top_customers': top_customers,
         'top_transporters': top_transporters,
         'recent_trips': recent_trips,

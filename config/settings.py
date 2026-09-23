@@ -136,6 +136,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Django Unfold Configuration
+from django.templatetags.static import static
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 
@@ -148,6 +149,9 @@ UNFOLD = {
     'THEME': 'light',
     'BORDER_RADIUS': '8px',
     'DASHBOARD_CALLBACK': 'register.views.dashboard_callback',
+    'STYLES': [
+        lambda request: static('css/ndbt_admin.css'),
+    ],
     'SIDEBAR': {
         'show_search': True,
         'show_all_applications': False,

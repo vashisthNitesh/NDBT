@@ -1,0 +1,253 @@
+/* ==========================================================================
+   NDBT Transport Management System - 2026 Enterprise Admin Theme
+   Design System: Precision Logistics Typography, Balanced Grids, & Micro-Interactions
+   ========================================================================== */
+
+/* 1. Global Typography & Numerical Alignment */
+:root {
+  --ndbt-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --ndbt-font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+body {
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Force Tabular Numbers across all financial/logistical figures */
+.tabular-nums,
+[data-column-name*="freight"],
+[data-column-name*="advance"],
+[data-column-name*="balance"],
+[data-column-name*="tds"],
+[data-column-name*="commission"],
+[data-column-name*="amount"],
+[data-column-name*="date"],
+[data-column-name="lr_no"],
+.financial-num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* 2. Scrollbar Ergonomics & Layout Stability */
+html, body, .overflow-x-auto, .overflow-y-auto {
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.6);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.4);
+}
+
+/* 3. Form Fieldset Grid & Alignment Engine */
+/* Guarantee that 2-column rows stay perfectly 50/50 without jumping */
+fieldset.module {
+  border: 1px solid var(--color-base-200, rgba(226, 232, 240, 0.8));
+  border-radius: 0.875rem;
+  background-color: var(--color-base-white, #ffffff);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dark fieldset.module {
+  border-color: var(--color-base-800, rgba(30, 41, 59, 0.8));
+  background-color: var(--color-base-900, #0f172a);
+}
+
+/* Form row padding & balanced distribution */
+.form-row {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--color-base-100, rgba(241, 245, 249, 0.8));
+}
+
+.dark .form-row {
+  border-bottom-color: var(--color-base-800, rgba(30, 41, 59, 0.5));
+}
+
+.form-row:last-child {
+  border-bottom: none;
+}
+
+/* Grid columns balance */
+@media (min-width: 1024px) {
+  .lg\:grid-cols-2 {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 1.5rem !important;
+  }
+}
+
+/* Input Fields Refinement */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="email"],
+select,
+textarea {
+  border-radius: 0.5rem !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  padding: 0.625rem 0.875rem !important;
+  transition: all 0.15s ease-in-out !important;
+}
+
+/* Readonly fields appearance */
+.readonly {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  background-color: var(--color-base-50, rgba(248, 250, 252, 0.8));
+  border: 1px dashed var(--color-base-300, rgba(203, 213, 225, 0.8));
+  color: var(--color-base-800, #1e293b);
+  min-height: 2.5rem;
+  width: 100%;
+}
+
+.dark .readonly {
+  background-color: var(--color-base-800, rgba(30, 41, 59, 0.5));
+  border-color: var(--color-base-700, rgba(51, 65, 85, 0.8));
+  color: var(--color-base-200, #e2e8f0);
+}
+
+/* 4. Tab Navigation Refinement */
+nav#tabs-items {
+  border: 1px solid var(--color-base-200, rgba(226, 232, 240, 0.8));
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.dark nav#tabs-items {
+  border-color: var(--color-base-800, rgba(30, 41, 59, 0.8));
+}
+
+nav#tabs-items a {
+  transition: all 0.15s ease-in-out;
+}
+
+nav#tabs-items a.active {
+  font-weight: 600;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* 5. Data Grid / Changelist Enhancements */
+#changelist-form table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+#changelist-form thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(248, 250, 252, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 2px solid var(--color-base-200, rgba(226, 232, 240, 1));
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.6875rem;
+}
+
+.dark #changelist-form thead th {
+  background: rgba(15, 23, 42, 0.95);
+  border-bottom-color: var(--color-base-800, rgba(30, 41, 59, 1));
+}
+
+#changelist-form tbody tr {
+  transition: background-color 0.12s ease-in-out;
+}
+
+#changelist-form tbody tr:hover {
+  background-color: rgba(241, 245, 249, 0.7);
+}
+
+.dark #changelist-form tbody tr:hover {
+  background-color: rgba(30, 41, 59, 0.5);
+}
+
+#changelist-form td {
+  padding: 0.75rem 1rem;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--color-base-100, rgba(241, 245, 249, 0.8));
+}
+
+.dark #changelist-form td {
+  border-bottom-color: var(--color-base-800, rgba(30, 41, 59, 0.4));
+}
+
+/* 6. Dashboard Executive Card Hover & Transitions */
+.kpi-card {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+}
+
+.dark .kpi-card:hover {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+}
+
+/* 7. Settlement Health Multi-Segment Progress Bar */
+.settlement-bar {
+  display: flex;
+  height: 0.875rem;
+  border-radius: 9999px;
+  overflow: hidden;
+  background-color: var(--color-base-100, #f1f5f9);
+  padding: 2px;
+  gap: 2px;
+}
+
+.dark .settlement-bar {
+  background-color: var(--color-base-800, #1e293b);
+}
+
+.settlement-segment {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+/* 8. Quick Filter Pill Tabs */
+.fy-pill {
+  transition: all 0.15s ease-in-out;
+}
+
+.fy-pill.active {
+  background-color: var(--color-primary-600, #2563eb) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.25);
+}

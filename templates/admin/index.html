@@ -10,189 +10,451 @@
 {% block content %}
 <div class="space-y-6">
 
-    <!-- Executive Header Banner -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-6 rounded-2xl bg-white dark:bg-base-900 border border-base-200 dark:border-base-800 shadow-sm">
+    <!-- Executive Header Banner with FY Switcher -->
+    <div class="p-6 rounded-2xl bg-white dark:bg-base-900 border border-base-200 dark:border-base-800 shadow-sm flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         <div>
-            <div class="flex items-center gap-2 mb-1.5">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary-50 dark:bg-primary-950/60 text-primary-700 dark:text-primary-300 border border-primary-200/60 dark:border-primary-800/60">
-                    FY {{ current_fy }}
+            <div class="flex items-center gap-2 mb-2">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
+                    <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Live TMS Cloud
                 </span>
-                <span class="inline-flex items-center gap-1.5 text-xs text-base-500 dark:text-base-400">
-                    <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-                    PostgreSQL Connected
+                <span class="text-xs text-base-500 dark:text-base-400">
+                    Current FY: <strong>{{ current_fy }}</strong>
                 </span>
             </div>
-            <h1 class="text-2xl font-bold tracking-tight text-base-900 dark:text-base-100">
-                Transport Operations Overview
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-base-900 dark:text-base-100">
+                Transport Command Center
             </h1>
-            <p class="text-xs sm:text-sm text-base-500 dark:text-base-400 mt-0.5">
-                Real-time operational summary, party receivables, and settlement metrics.
+            <p class="text-xs sm:text-sm text-base-500 dark:text-base-400 mt-1">
+                Executive analytics, live transit corridors, party receivables, and settlement health.
             </p>
         </div>
 
-        <div class="flex items-center gap-3">
-            <a href="{% url 'admin:customer_outstanding_report' %}"
-               class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-base-100 dark:bg-base-800 hover:bg-base-200 dark:hover:bg-base-700 text-base-800 dark:text-base-200 transition">
-                <span class="material-symbols-outlined text-sm">pending_actions</span>
-                Party Outstanding
-            </a>
+        <!-- FY Filter Pills & Quick Actions -->
+        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <!-- FY Selector Pills -->
+            <div class="inline-flex p-1 rounded-xl bg-base-100 dark:bg-base-800/80 border border-base-200 dark:border-base-700/80 text-xs">
+                <a href="?fy=ALL"
+                   class="px-3 py-1.5 rounded-lg font-medium transition fy-pill {% if selected_fy == 'ALL' %}active{% else %}text-base-600 dark:text-base-300 hover:text-base-900 dark:hover:text-base-100{% endif %}">
+                    All Time
+                </a>
+                {% for fy in available_fys %}
+                <a href="?fy={{ fy }}"
+                   class="px-2.5 py-1.5 rounded-lg font-medium transition fy-pill {% if selected_fy == fy %}active{% else %}text-base-600 dark:text-base-300 hover:text-base-900 dark:hover:text-base-100{% endif %}">
+                    {{ fy }}
+                </a>
+                {% endfor %}
+            </div>
+
+            <!-- Primary Action -->
             <a href="{% url 'admin:register_trip_changelist' %}"
-               class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-primary-600 hover:bg-primary-700 text-white shadow-sm transition">
-                <span class="material-symbols-outlined text-sm">list_alt</span>
-                Open Trip Register
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-primary-600 hover:bg-primary-700 text-white shadow-sm transition">
+                <span class="material-symbols-outlined text-base">local_shipping</span>
+                Trip Register
             </a>
         </div>
     </div>
 
-    <!-- 4 Balanced KPI Cards -->
+    <!-- 8 Executive KPIs (4x2 Responsive Grid) -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- Total Trips -->
-        <div class="p-5 rounded-xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 shadow-sm hover:border-base-300 dark:hover:border-base-700 transition">
+        <!-- 1. Total Trips -->
+        <div class="kpi-card p-5 rounded-2xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 shadow-sm">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-semibold text-base-500 dark:text-base-400 uppercase tracking-wider">Total Trips</span>
-                <span class="p-2 rounded-lg bg-primary-50 dark:bg-primary-950/60 text-primary-600 dark:text-primary-400 material-symbols-outlined text-xl">
+                <span class="text-xs font-bold text-base-500 dark:text-base-400 uppercase tracking-wider">Total Trips</span>
+                <span class="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 material-symbols-outlined text-xl">
                     local_shipping
                 </span>
             </div>
             <div class="mt-3">
-                <div class="text-2xl font-extrabold text-base-900 dark:text-base-100">
+                <div class="text-3xl font-black tabular-nums text-base-900 dark:text-base-100">
                     {{ kpi_total_trips|default:"0" }}
                 </div>
-                <div class="mt-1 text-xs text-base-500 dark:text-base-400">
-                    {{ kpi_active_vehicles }} Vehicles • {{ kpi_active_customers }} Customers
+                <div class="mt-1.5 text-xs text-base-500 dark:text-base-400">
+                    {{ kpi_active_vehicles }} Active Vehicles • {{ kpi_active_customers }} Customers
                 </div>
             </div>
         </div>
 
-        <!-- Total Freight Volume -->
-        <div class="p-5 rounded-xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 shadow-sm hover:border-base-300 dark:hover:border-base-700 transition">
+        <!-- 2. Total Freight Volume -->
+        <div class="kpi-card p-5 rounded-2xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 shadow-sm">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-semibold text-base-500 dark:text-base-400 uppercase tracking-wider">Total Freight</span>
-                <span class="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 material-symbols-outlined text-xl">
+                <span class="text-xs font-bold text-base-500 dark:text-base-400 uppercase tracking-wider">Contracted Freight</span>
+                <span class="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 material-symbols-outlined text-xl">
                     currency_rupee
                 </span>
             </div>
             <div class="mt-3">
-                <div class="text-2xl font-extrabold text-base-900 dark:text-base-100">
+                <div class="text-3xl font-black tabular-nums text-base-900 dark:text-base-100">
                     {{ kpi_total_freight|indian_currency }}
                 </div>
-                <div class="mt-1 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                    All-time contracted freight
+                <div class="mt-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                    Gross revenue volume
                 </div>
             </div>
         </div>
 
-        <!-- Customer Outstanding Balance -->
-        <div class="p-5 rounded-xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 shadow-sm hover:border-base-300 dark:hover:border-base-700 transition">
+        <!-- 3. Party Receivables (Balance Due) -->
+        <div class="kpi-card p-5 rounded-2xl border border-rose-200 dark:border-rose-900/50 bg-white dark:bg-base-900 shadow-sm">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-semibold text-base-500 dark:text-base-400 uppercase tracking-wider">Party Outstanding</span>
-                <span class="p-2 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 material-symbols-outlined text-xl">
+                <span class="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider">Party Receivables</span>
+                <span class="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 material-symbols-outlined text-xl">
                     account_balance
                 </span>
             </div>
             <div class="mt-3">
-                <div class="text-2xl font-extrabold text-rose-600 dark:text-rose-400">
+                <div class="text-3xl font-black tabular-nums text-rose-600 dark:text-rose-400">
                     {{ kpi_party_balance|indian_currency }}
                 </div>
-                <div class="mt-1 text-xs text-base-500 dark:text-base-400">
-                    <a href="{% url 'admin:customer_outstanding_report' %}" class="text-primary-600 hover:underline">
-                        View receivables report →
+                <div class="mt-1.5 text-xs text-base-500 dark:text-base-400">
+                    <a href="{% url 'admin:customer_outstanding_report' %}" class="text-primary-600 dark:text-primary-400 hover:underline">
+                        View party outstanding ledger →
                     </a>
                 </div>
             </div>
         </div>
 
-        <!-- Brokerage Commission -->
-        <div class="p-5 rounded-xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 shadow-sm hover:border-base-300 dark:hover:border-base-700 transition">
+        <!-- 4. Lorry Advance Liability -->
+        <div class="kpi-card p-5 rounded-2xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 shadow-sm">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-semibold text-base-500 dark:text-base-400 uppercase tracking-wider">Commission Earned</span>
-                <span class="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 material-symbols-outlined text-xl">
+                <span class="text-xs font-bold text-base-500 dark:text-base-400 uppercase tracking-wider">Transporter Advance</span>
+                <span class="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 material-symbols-outlined text-xl">
+                    payments
+                </span>
+            </div>
+            <div class="mt-3">
+                <div class="text-3xl font-black tabular-nums text-amber-600 dark:text-amber-400">
+                    {{ kpi_total_advance|indian_currency }}
+                </div>
+                <div class="mt-1.5 text-xs text-base-500 dark:text-base-400">
+                    Party advances collected
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Brokerage Commission Income -->
+        <div class="kpi-card p-5 rounded-2xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 shadow-sm">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-base-500 dark:text-base-400 uppercase tracking-wider">Commission Income</span>
+                <span class="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 material-symbols-outlined text-xl">
                     handshake
                 </span>
             </div>
             <div class="mt-3">
-                <div class="text-2xl font-extrabold text-blue-600 dark:text-blue-400">
+                <div class="text-3xl font-black tabular-nums text-indigo-600 dark:text-indigo-400">
                     {{ kpi_total_commission|indian_currency }}
                 </div>
-                <div class="mt-1 text-xs text-base-500 dark:text-base-400">
-                    Direct brokerage revenue
+                <div class="mt-1.5 text-xs text-base-500 dark:text-base-400">
+                    Direct brokerage margin earned
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Section 194C TDS Deducted -->
+        <div class="kpi-card p-5 rounded-2xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 shadow-sm">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-base-500 dark:text-base-400 uppercase tracking-wider">TDS (Sec 194C)</span>
+                <span class="p-2.5 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 material-symbols-outlined text-xl">
+                    receipt_long
+                </span>
+            </div>
+            <div class="mt-3">
+                <div class="text-3xl font-black tabular-nums text-purple-600 dark:text-purple-400">
+                    {{ kpi_total_tds|indian_currency }}
+                </div>
+                <div class="mt-1.5 text-xs text-base-500 dark:text-base-400">
+                    <a href="{% url 'admin:tds_register_report' %}" class="text-primary-600 dark:text-primary-400 hover:underline">
+                        Audit-ready TDS ledger →
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. Detention & Extra Charges -->
+        <div class="kpi-card p-5 rounded-2xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 shadow-sm">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-base-500 dark:text-base-400 uppercase tracking-wider">Detention & Labour</span>
+                <span class="p-2.5 rounded-xl bg-cyan-50 dark:bg-cyan-950/60 text-cyan-600 dark:text-cyan-400 material-symbols-outlined text-xl">
+                    schedule
+                </span>
+            </div>
+            <div class="mt-3">
+                <div class="text-3xl font-black tabular-nums text-cyan-600 dark:text-cyan-400">
+                    {{ kpi_total_extra_charges|indian_currency }}
+                </div>
+                <div class="mt-1.5 text-xs text-base-500 dark:text-base-400">
+                    Holding & hamali recoveries
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. Average Ticket Size (Freight per Trip) -->
+        <div class="kpi-card p-5 rounded-2xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 shadow-sm">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-base-500 dark:text-base-400 uppercase tracking-wider">Avg. Ticket Size</span>
+                <span class="p-2.5 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 material-symbols-outlined text-xl">
+                    trending_up
+                </span>
+            </div>
+            <div class="mt-3">
+                <div class="text-3xl font-black tabular-nums text-teal-600 dark:text-teal-400">
+                    {{ kpi_avg_freight|indian_currency }}
+                </div>
+                <div class="mt-1.5 text-xs text-base-500 dark:text-base-400">
+                    Average freight per LR
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Operational Backlog Alert Banner (Clean & Subtle) -->
-    {% if kpi_pending_memos or kpi_missing_pods %}
-    <div class="p-4 rounded-xl border border-amber-200/80 dark:border-amber-900/40 bg-amber-50/60 dark:bg-amber-950/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-amber-600 dark:text-amber-400">
-                info
-            </span>
-            <div>
-                <span class="text-xs font-bold text-amber-900 dark:text-amber-200 uppercase tracking-wider block">
-                    Operational Backlog
-                </span>
-                <span class="text-xs text-amber-800/80 dark:text-amber-300/80">
-                    <strong>{{ kpi_pending_memos }}</strong> trips pending memo issuance, and <strong>{{ kpi_missing_pods }}</strong> trips awaiting physical POD.
+    <!-- Settlement Health Progress Bar & Operational Backlog -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Left 2 Cols: Settlement Health Visual Bar -->
+        <div class="lg:col-span-2 p-6 rounded-2xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-sm font-bold text-base-900 dark:text-base-100 uppercase tracking-wider flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary-600 text-lg">donut_large</span>
+                        Settlement Health & Payment Pipeline
+                    </h2>
+                    <p class="text-xs text-base-500 dark:text-base-400 mt-0.5">
+                        Breakdown of {{ kpi_total_trips }} trips across settlement stages.
+                    </p>
+                </div>
+                <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                    {{ pct_received }}% Settled
                 </span>
             </div>
+
+            <!-- Multi-Segment Visual Bar -->
+            <div class="settlement-bar my-4">
+                {% if pct_received > 0 %}
+                <div class="settlement-segment bg-emerald-500" style="width: {{ pct_received }}%;" title="Received: {{ count_received }} trips ({{ pct_received }}%)"></div>
+                {% endif %}
+                {% if pct_pending > 0 %}
+                <div class="settlement-segment bg-amber-500" style="width: {{ pct_pending }}%;" title="Pending: {{ count_pending }} trips ({{ pct_pending }}%)"></div>
+                {% endif %}
+                {% if pct_nil > 0 %}
+                <div class="settlement-segment bg-slate-400" style="width: {{ pct_nil }}%;" title="Nil: {{ count_nil }} trips ({{ pct_nil }}%)"></div>
+                {% endif %}
+                {% if pct_not_received > 0 %}
+                <div class="settlement-segment bg-rose-500" style="width: {{ pct_not_received }}%;" title="Not Received: {{ count_not_received }} trips ({{ pct_not_received }}%)"></div>
+                {% endif %}
+                {% if pct_to_pay > 0 %}
+                <div class="settlement-segment bg-indigo-500" style="width: {{ pct_to_pay }}%;" title="To Pay: {{ count_to_pay }} trips ({{ pct_to_pay }}%)"></div>
+                {% endif %}
+            </div>
+
+            <!-- Interactive Legend with Counts -->
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-3 border-t border-base-100 dark:border-base-800 text-xs">
+                <a href="{% url 'admin:register_trip_changelist' %}?balance_status=RECEIVED"
+                   class="p-2.5 rounded-xl bg-base-50 dark:bg-base-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition group">
+                    <div class="flex items-center gap-1.5 mb-1">
+                        <span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+                        <span class="font-medium text-base-600 dark:text-base-400 group-hover:text-emerald-600">Received</span>
+                    </div>
+                    <div class="text-base font-bold tabular-nums text-base-900 dark:text-base-100">
+                        {{ count_received }} <span class="text-[10px] font-normal text-base-400">({{ pct_received }}%)</span>
+                    </div>
+                </a>
+
+                <a href="{% url 'admin:register_trip_changelist' %}?balance_status=PENDING"
+                   class="p-2.5 rounded-xl bg-base-50 dark:bg-base-800/50 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition group">
+                    <div class="flex items-center gap-1.5 mb-1">
+                        <span class="h-2.5 w-2.5 rounded-full bg-amber-500"></span>
+                        <span class="font-medium text-base-600 dark:text-base-400 group-hover:text-amber-600">Pending</span>
+                    </div>
+                    <div class="text-base font-bold tabular-nums text-base-900 dark:text-base-100">
+                        {{ count_pending }} <span class="text-[10px] font-normal text-base-400">({{ pct_pending }}%)</span>
+                    </div>
+                </a>
+
+                <a href="{% url 'admin:register_trip_changelist' %}?balance_status=NIL"
+                   class="p-2.5 rounded-xl bg-base-50 dark:bg-base-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition group">
+                    <div class="flex items-center gap-1.5 mb-1">
+                        <span class="h-2.5 w-2.5 rounded-full bg-slate-400"></span>
+                        <span class="font-medium text-base-600 dark:text-base-400">Nil / Cleared</span>
+                    </div>
+                    <div class="text-base font-bold tabular-nums text-base-900 dark:text-base-100">
+                        {{ count_nil }} <span class="text-[10px] font-normal text-base-400">({{ pct_nil }}%)</span>
+                    </div>
+                </a>
+
+                <a href="{% url 'admin:register_trip_changelist' %}?balance_status=NOT_RECEIVED"
+                   class="p-2.5 rounded-xl bg-base-50 dark:bg-base-800/50 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition group">
+                    <div class="flex items-center gap-1.5 mb-1">
+                        <span class="h-2.5 w-2.5 rounded-full bg-rose-500"></span>
+                        <span class="font-medium text-base-600 dark:text-base-400 group-hover:text-rose-600">Overdue</span>
+                    </div>
+                    <div class="text-base font-bold tabular-nums text-rose-600 dark:text-rose-400">
+                        {{ count_not_received }} <span class="text-[10px] font-normal text-base-400">({{ pct_not_received }}%)</span>
+                    </div>
+                </a>
+
+                <a href="{% url 'admin:register_trip_changelist' %}?balance_status=TO_PAY"
+                   class="p-2.5 rounded-xl bg-base-50 dark:bg-base-800/50 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 transition group">
+                    <div class="flex items-center gap-1.5 mb-1">
+                        <span class="h-2.5 w-2.5 rounded-full bg-indigo-500"></span>
+                        <span class="font-medium text-base-600 dark:text-base-400 group-hover:text-indigo-600">To Pay</span>
+                    </div>
+                    <div class="text-base font-bold tabular-nums text-base-900 dark:text-base-100">
+                        {{ count_to_pay }} <span class="text-[10px] font-normal text-base-400">({{ pct_to_pay }}%)</span>
+                    </div>
+                </a>
+            </div>
         </div>
-        <div class="flex items-center gap-2">
-            <a href="{% url 'admin:pending_work_report' %}?tab=memo"
-               class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-base-900 border border-amber-300 dark:border-amber-700/60 text-amber-800 dark:text-amber-300 hover:bg-amber-100/60 transition">
-                Memos ({{ kpi_pending_memos }})
+
+        <!-- Right 1 Col: Operational Backlog & Quick Actions -->
+        <div class="p-6 rounded-2xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 shadow-sm flex flex-col justify-between">
+            <div>
+                <h2 class="text-sm font-bold text-base-900 dark:text-base-100 uppercase tracking-wider flex items-center gap-2 mb-1">
+                    <span class="material-symbols-outlined text-amber-500 text-lg">warning</span>
+                    Operational Attention
+                </h2>
+                <p class="text-xs text-base-500 dark:text-base-400 mb-4">
+                    Items requiring immediate operational dispatch or documentation.
+                </p>
+
+                <div class="space-y-3">
+                    <!-- Pending Memos -->
+                    <a href="{% url 'admin:pending_work_report' %}?tab=memo"
+                       class="flex items-center justify-between p-3 rounded-xl border border-base-200 dark:border-base-800 hover:border-amber-300 dark:hover:border-amber-700 bg-base-50/60 dark:bg-base-800/40 transition">
+                        <div class="flex items-center gap-2.5">
+                            <span class="material-symbols-outlined text-amber-600 text-base">hourglass_empty</span>
+                            <span class="text-xs font-semibold text-base-800 dark:text-base-200">Pending Memos</span>
+                        </div>
+                        <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300">
+                            {{ kpi_pending_memos }}
+                        </span>
+                    </a>
+
+                    <!-- Missing PODs -->
+                    <a href="{% url 'admin:pending_work_report' %}?tab=pod"
+                       class="flex items-center justify-between p-3 rounded-xl border border-base-200 dark:border-base-800 hover:border-blue-300 dark:hover:border-blue-700 bg-base-50/60 dark:bg-base-800/40 transition">
+                        <div class="flex items-center gap-2.5">
+                            <span class="material-symbols-outlined text-blue-600 text-base">description</span>
+                            <span class="text-xs font-semibold text-base-800 dark:text-base-200">Missing Physical PODs</span>
+                        </div>
+                        <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
+                            {{ kpi_missing_pods }}
+                        </span>
+                    </a>
+
+                    <!-- Overdue Balances -->
+                    <a href="{% url 'admin:register_trip_changelist' %}?balance_status=NOT_RECEIVED"
+                       class="flex items-center justify-between p-3 rounded-xl border border-base-200 dark:border-base-800 hover:border-rose-300 dark:hover:border-rose-700 bg-base-50/60 dark:bg-base-800/40 transition">
+                        <div class="flex items-center gap-2.5">
+                            <span class="material-symbols-outlined text-rose-600 text-base">report_problem</span>
+                            <span class="text-xs font-semibold text-base-800 dark:text-base-200">Overdue Uncollected</span>
+                        </div>
+                        <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300">
+                            {{ count_not_received }}
+                        </span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-4 border-t border-base-100 dark:border-base-800">
+                <a href="{% url 'admin:pending_work_report' %}" class="text-xs font-bold text-primary-600 dark:text-primary-400 hover:underline flex items-center justify-between">
+                    Open Complete Backlog Audit
+                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Top Transit Corridors (Lanes) -->
+    <div class="p-6 rounded-2xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 shadow-sm">
+        <div class="flex items-center justify-between mb-4 pb-2 border-b border-base-100 dark:border-base-800">
+            <div>
+                <h3 class="text-xs font-bold text-base-900 dark:text-base-100 uppercase tracking-wider flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary-600 text-base">alt_route</span>
+                    Top High-Volume Transit Corridors
+                </h3>
+                <p class="text-xs text-base-500 dark:text-base-400 mt-0.5">
+                    Highest density freight lanes ranked by completed trips.
+                </p>
+            </div>
+            <a href="{% url 'admin:register_lane_changelist' %}" class="text-xs font-semibold text-primary-600 dark:text-primary-400 hover:underline">
+                All 475 Lanes →
             </a>
-            <a href="{% url 'admin:pending_work_report' %}?tab=pod"
-               class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white transition">
-                PODs ({{ kpi_missing_pods }})
-            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+            {% for lane in top_lanes %}
+            <div class="p-3.5 rounded-xl border border-base-100 dark:border-base-800 bg-base-50/60 dark:bg-base-800/40">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary-100 dark:bg-primary-950 text-primary-700 dark:text-primary-300">
+                        #{{ forloop.counter }}
+                    </span>
+                    <span class="text-xs font-bold text-base-900 dark:text-base-100 tabular-nums">
+                        {{ lane.trip_count }} Trips
+                    </span>
+                </div>
+                <div class="font-semibold text-xs text-base-900 dark:text-base-100 mb-1 truncate" title="{{ lane.lane__name }}">
+                    {{ lane.lane__name }}
+                </div>
+                <div class="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 tabular-nums">
+                    {{ lane.lane_freight|indian_currency }}
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-5 p-4 text-center text-xs text-base-400">
+                No lane data recorded for selected period.
+            </div>
+            {% endfor %}
         </div>
     </div>
-    {% endif %}
 
-    <!-- Analytics Section: Recent Trips & Top Masters -->
+    <!-- Ledger & Master Rankings (2 Cols + 1 Col) -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         <!-- Left 2 Cols: Recent Trips Ledger -->
-        <div class="lg:col-span-2 rounded-xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 shadow-sm overflow-hidden">
+        <div class="lg:col-span-2 rounded-2xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 shadow-sm overflow-hidden">
             <div class="p-4 border-b border-base-100 dark:border-base-800 flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <span class="material-symbols-outlined text-primary-600 text-lg">history</span>
-                    <h2 class="text-sm font-bold text-base-900 dark:text-base-100">Recent Trips Ledger</h2>
+                    <h2 class="text-sm font-bold text-base-900 dark:text-base-100 uppercase tracking-wider">Recent Trips Ledger</h2>
                 </div>
-                <a href="{% url 'admin:register_trip_changelist' %}" class="text-xs font-semibold text-primary-600 hover:underline flex items-center gap-1">
-                    View Register <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                <a href="{% url 'admin:register_trip_changelist' %}" class="text-xs font-semibold text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1">
+                    Open Full Register <span class="material-symbols-outlined text-xs">arrow_forward</span>
                 </a>
             </div>
 
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs">
-                    <thead class="bg-base-50/80 dark:bg-base-800/40 text-base-500 uppercase font-semibold text-[10px] tracking-wider border-b border-base-100 dark:border-base-800">
+                    <thead class="bg-base-50/80 dark:bg-base-800/40 text-base-500 uppercase font-bold text-[10px] tracking-wider border-b border-base-100 dark:border-base-800">
                         <tr>
-                            <th class="p-3">LR</th>
-                            <th class="p-3">Date</th>
-                            <th class="p-3">Vehicle</th>
-                            <th class="p-3">Party (Customer)</th>
-                            <th class="p-3">Route</th>
-                            <th class="p-3 text-right">Freight</th>
-                            <th class="p-3 text-center">Status</th>
+                            <th class="p-3.5">LR No.</th>
+                            <th class="p-3.5">Date</th>
+                            <th class="p-3.5">Vehicle</th>
+                            <th class="p-3.5">Customer (Consignor)</th>
+                            <th class="p-3.5">Route</th>
+                            <th class="p-3.5 text-right">Freight</th>
+                            <th class="p-3.5 text-center">Status</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-base-100 dark:divide-base-800">
                         {% for trip in recent_trips %}
                         <tr class="hover:bg-base-50/50 dark:hover:bg-base-800/30 transition">
-                            <td class="p-3 font-bold text-primary-600">
+                            <td class="p-3.5 font-bold text-primary-600 dark:text-primary-400">
                                 <a href="{% url 'admin:register_trip_change' trip.id %}" class="hover:underline">#{{ trip.lr_no }}</a>
                             </td>
-                            <td class="p-3 text-base-500">{{ trip.booking_date|date:"d M Y" }}</td>
-                            <td class="p-3 font-mono font-medium text-base-800 dark:text-base-200">{{ trip.vehicle.reg_no }}</td>
-                            <td class="p-3 font-medium text-base-900 dark:text-base-100">{{ trip.consignor.name|truncatechars:20 }}</td>
-                            <td class="p-3 text-base-500">{{ trip.origin|truncatechars:10 }} → {{ trip.destination|truncatechars:10 }}</td>
-                            <td class="p-3 text-right font-medium text-base-900 dark:text-base-100">{{ trip.freight|indian_currency }}</td>
-                            <td class="p-3 text-center">
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold
+                            <td class="p-3.5 text-base-500 whitespace-nowrap">{{ trip.booking_date|date:"d M Y" }}</td>
+                            <td class="p-3.5">
+                                <span class="font-mono text-xs font-medium px-2 py-0.5 rounded bg-base-100 dark:bg-base-800 text-base-800 dark:text-base-200">
+                                    {{ trip.vehicle.reg_no }}
+                                </span>
+                            </td>
+                            <td class="p-3.5 font-medium text-base-900 dark:text-base-100">{{ trip.consignor.name|truncatechars:22 }}</td>
+                            <td class="p-3.5 text-base-500 whitespace-nowrap">{{ trip.origin|truncatechars:10 }} &rarr; {{ trip.destination|truncatechars:10 }}</td>
+                            <td class="p-3.5 text-right font-bold tabular-nums text-base-900 dark:text-base-100">{{ trip.freight|indian_currency }}</td>
+                            <td class="p-3.5 text-center">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold
                                     {% if trip.balance_status == 'RECEIVED' %}bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300
                                     {% elif trip.balance_status == 'PENDING' %}bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300
+                                    {% elif trip.balance_status == 'NOT_RECEIVED' %}bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300
                                     {% else %}bg-base-100 dark:bg-base-800 text-base-600 dark:text-base-300{% endif %}">
                                     {{ trip.balance_status }}
                                 </span>
@@ -200,7 +462,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="7" class="p-8 text-center text-base-400">No trips recorded yet.</td>
+                            <td colspan="7" class="p-8 text-center text-base-400">No trips recorded for this financial year.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -212,57 +474,61 @@
         <div class="space-y-6">
 
             <!-- Top Customers Card -->
-            <div class="rounded-xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 shadow-sm p-4">
+            <div class="rounded-2xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 shadow-sm p-4">
                 <div class="flex items-center justify-between mb-3 border-b border-base-100 dark:border-base-800 pb-2">
                     <h3 class="text-xs font-bold text-base-900 dark:text-base-100 uppercase tracking-wider flex items-center gap-1.5">
                         <span class="material-symbols-outlined text-primary-600 text-sm">business</span>
-                        Top Customers
+                        Top Customers (Consignors)
                     </h3>
                     <a href="{% url 'admin:customer_outstanding_report' %}" class="text-[11px] font-medium text-primary-600 hover:underline">
-                        All Customers →
+                        Ledger →
                     </a>
                 </div>
 
                 <div class="space-y-2">
                     {% for c in top_customers %}
-                    <div class="flex items-center justify-between text-xs p-2.5 rounded-lg bg-base-50/70 dark:bg-base-800/40">
+                    <div class="flex items-center justify-between text-xs p-2.5 rounded-xl bg-base-50/70 dark:bg-base-800/40">
                         <div>
-                            <span class="font-semibold text-base-900 dark:text-base-100 block">{{ c.name|truncatechars:22 }}</span>
+                            <span class="font-semibold text-base-900 dark:text-base-100 block">{{ c.consignor__name|truncatechars:22 }}</span>
                             <span class="text-[10px] text-base-500">{{ c.trip_count }} Trips</span>
                         </div>
                         <div class="text-right">
-                            <span class="font-bold text-rose-600 dark:text-rose-400 block">{{ c.pending_balance|indian_currency }}</span>
+                            <span class="font-bold text-rose-600 dark:text-rose-400 tabular-nums block">{{ c.pending_balance|indian_currency }}</span>
                             <span class="text-[10px] text-base-400">Balance</span>
                         </div>
                     </div>
+                    {% empty %}
+                    <div class="text-center text-xs text-base-400 p-3">No customers found.</div>
                     {% endfor %}
                 </div>
             </div>
 
             <!-- Top Transporters Card -->
-            <div class="rounded-xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 shadow-sm p-4">
+            <div class="rounded-2xl border border-base-200 dark:border-base-800 bg-white dark:bg-base-900 shadow-sm p-4">
                 <div class="flex items-center justify-between mb-3 border-b border-base-100 dark:border-base-800 pb-2">
                     <h3 class="text-xs font-bold text-base-900 dark:text-base-100 uppercase tracking-wider flex items-center gap-1.5">
                         <span class="material-symbols-outlined text-primary-600 text-sm">directions_bus</span>
-                        Top Transporters
+                        Top Transporters (Owners)
                     </h3>
                     <a href="{% url 'admin:transporter_payable_report' %}" class="text-[11px] font-medium text-primary-600 hover:underline">
-                        All Owners →
+                        Ledger →
                     </a>
                 </div>
 
                 <div class="space-y-2">
                     {% for t in top_transporters %}
-                    <div class="flex items-center justify-between text-xs p-2.5 rounded-lg bg-base-50/70 dark:bg-base-800/40">
+                    <div class="flex items-center justify-between text-xs p-2.5 rounded-xl bg-base-50/70 dark:bg-base-800/40">
                         <div>
-                            <span class="font-semibold text-base-900 dark:text-base-100 block">{{ t.name|truncatechars:22 }}</span>
-                            <span class="text-[10px] text-base-500 font-mono">{{ t.pan|default:"No PAN" }}</span>
+                            <span class="font-semibold text-base-900 dark:text-base-100 block">{{ t.lorry_owner__name|truncatechars:22 }}</span>
+                            <span class="text-[10px] text-base-500 font-mono">{{ t.lorry_owner__pan|default:"No PAN" }}</span>
                         </div>
                         <div class="text-right">
-                            <span class="font-bold text-base-900 dark:text-base-100 block">{{ t.trip_count }} Trips</span>
-                            <span class="text-[10px] text-purple-600 dark:text-purple-400">{{ t.total_tds|indian_currency }} TDS</span>
+                            <span class="font-bold text-base-900 dark:text-base-100 tabular-nums block">{{ t.trip_count }} Trips</span>
+                            <span class="text-[10px] text-purple-600 dark:text-purple-400 tabular-nums">{{ t.total_tds|indian_currency }} TDS</span>
                         </div>
                     </div>
+                    {% empty %}
+                    <div class="text-center text-xs text-base-400 p-3">No transporters found.</div>
                     {% endfor %}
                 </div>
             </div>
