@@ -1,6 +1,7 @@
 asgiref==3.12.1
 diff-match-patch==20241021
 django==5.1.15
+django-cors-headers==4.9.0
 django-environ==0.14.0
 django-import-export==4.4.1
 django-otp==1.7.3
