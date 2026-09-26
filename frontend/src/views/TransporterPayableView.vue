@@ -25,28 +25,28 @@
     </div>
 
     <!-- Summary KPI cards -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div class="p-4 rounded-xl bg-white border border-slate-200">
-        <span class="text-[11px] font-bold text-slate-500 uppercase">Transporters</span>
-        <div class="text-xl font-black text-slate-900 font-mono-numbers mt-1">{{ formatNumber(reportData.results?.length || 0) }}</div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+      <div class="p-3.5 sm:p-4 rounded-xl bg-white border border-slate-200 min-w-0 overflow-hidden">
+        <span class="text-[11px] font-bold text-slate-500 uppercase truncate block">Transporters</span>
+        <div class="text-base sm:text-xl font-black text-slate-900 font-mono-numbers mt-1 truncate">{{ formatNumber(reportData.results?.length || 0) }}</div>
       </div>
-      <div class="p-4 rounded-xl bg-white border border-slate-200">
-        <span class="text-[11px] font-bold text-slate-500 uppercase">Total Trips</span>
-        <div class="text-xl font-black text-slate-900 font-mono-numbers mt-1">{{ formatNumber(reportData.totals?.trip_count || 0) }}</div>
+      <div class="p-3.5 sm:p-4 rounded-xl bg-white border border-slate-200 min-w-0 overflow-hidden">
+        <span class="text-[11px] font-bold text-slate-500 uppercase truncate block">Total Trips</span>
+        <div class="text-base sm:text-xl font-black text-slate-900 font-mono-numbers mt-1 truncate">{{ formatNumber(reportData.totals?.trip_count || 0) }}</div>
       </div>
-      <div class="p-4 rounded-xl bg-white border border-slate-200">
-        <span class="text-[11px] font-bold text-slate-500 uppercase">Total TDS Withheld</span>
-        <div class="text-xl font-black text-blue-600 font-mono-numbers mt-1">{{ formatINR(reportData.totals?.tds || 0) }}</div>
+      <div class="p-3.5 sm:p-4 rounded-xl bg-white border border-slate-200 min-w-0 overflow-hidden">
+        <span class="text-[11px] font-bold text-slate-500 uppercase truncate block">Total TDS Withheld</span>
+        <div class="text-base sm:text-xl font-black text-blue-600 font-mono-numbers mt-1 truncate">{{ formatINR(reportData.totals?.tds || 0) }}</div>
       </div>
-      <div class="p-4 rounded-xl bg-amber-50/70 border border-amber-200">
-        <span class="text-[11px] font-bold text-amber-700 uppercase">Balance Due to Owners</span>
-        <div class="text-xl font-black text-amber-900 font-mono-numbers mt-1">{{ formatINR(reportData.totals?.balance_due || 0) }}</div>
+      <div class="p-3.5 sm:p-4 rounded-xl bg-amber-50/70 border border-amber-200 min-w-0 overflow-hidden">
+        <span class="text-[11px] font-bold text-amber-700 uppercase truncate block">Balance Due to Owners</span>
+        <div class="text-base sm:text-xl font-black text-amber-900 font-mono-numbers mt-1 truncate">{{ formatINR(reportData.totals?.balance_due || 0) }}</div>
       </div>
     </div>
 
     <!-- Search & Data Table -->
     <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden">
-      <div class="p-4 border-b border-slate-100">
+      <div class="p-3.5 sm:p-4 border-b border-slate-100">
         <input
           type="text"
           v-model="searchQuery"
@@ -54,6 +54,12 @@
           placeholder="Search transporter name or PAN..."
           class="w-full sm:w-80 px-3.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-hidden focus:border-blue-500"
         />
+      </div>
+
+      <!-- Mobile Table Swipe Hint -->
+      <div class="sm:hidden px-3.5 py-1.5 text-[11px] font-semibold text-slate-500 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
+        <span>👉 Swipe horizontally for full report</span>
+        <span class="text-[10px] text-slate-400">Scroll &rarr;</span>
       </div>
 
       <div class="overflow-x-auto table-containment-region">

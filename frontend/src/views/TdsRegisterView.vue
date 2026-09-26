@@ -25,20 +25,20 @@
     </div>
 
     <!-- Total TDS Card -->
-    <div class="bg-blue-600 text-white rounded-2xl p-6 shadow-md shadow-blue-500/20 flex items-center justify-between">
-      <div>
+    <div class="bg-blue-600 text-white rounded-2xl p-4 sm:p-6 shadow-md shadow-blue-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="min-w-0">
         <span class="text-xs font-bold uppercase tracking-wider text-blue-200">Total Section 194C TDS Deducted</span>
-        <div class="text-3xl font-black font-mono-numbers mt-1">{{ formatINR(reportData.total_tds || 0) }}</div>
+        <div class="text-2xl sm:text-3xl font-black font-mono-numbers mt-1 truncate">{{ formatINR(reportData.total_tds || 0) }}</div>
       </div>
-      <div class="text-right">
+      <div class="sm:text-right">
         <span class="text-xs text-blue-200 block">Deduction Entries</span>
-        <span class="text-2xl font-bold font-mono-numbers">{{ formatNumber(reportData.count || 0) }}</span>
+        <span class="text-xl sm:text-2xl font-bold font-mono-numbers">{{ formatNumber(reportData.count || 0) }}</span>
       </div>
     </div>
 
     <!-- Data Table -->
     <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden">
-      <div class="p-4 border-b border-slate-100">
+      <div class="p-3.5 sm:p-4 border-b border-slate-100">
         <input
           type="text"
           v-model="searchQuery"
@@ -46,6 +46,12 @@
           placeholder="Filter by Transporter, PAN, Vehicle, LR No..."
           class="w-full sm:w-80 px-3.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-hidden focus:border-blue-500"
         />
+      </div>
+
+      <!-- Mobile Table Swipe Hint -->
+      <div class="sm:hidden px-3.5 py-1.5 text-[11px] font-semibold text-slate-500 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
+        <span>👉 Swipe horizontally for full TDS register</span>
+        <span class="text-[10px] text-slate-400">Scroll &rarr;</span>
       </div>
 
       <div class="overflow-x-auto table-containment-region">

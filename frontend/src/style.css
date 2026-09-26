@@ -17,8 +17,10 @@
     --slate-50: #f8fafc;
   }
 
-  body {
+  html, body {
     margin: 0;
+    max-width: 100%;
+    overflow-x: hidden;
     background-color: #f8fafc;
     color: #0f172a;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -35,6 +37,16 @@
   .table-containment-region {
     content-visibility: auto;
     contain-intrinsic-size: auto 600px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Smooth touch scroll and hide scrollbar utility */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
   /* Custom Slim Scrollbars */

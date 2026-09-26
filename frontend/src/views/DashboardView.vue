@@ -256,6 +256,12 @@
         </router-link>
       </div>
 
+      <!-- Mobile Table Swipe Hint -->
+      <div class="sm:hidden px-3.5 py-1.5 text-[11px] font-semibold text-slate-500 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
+        <span>👉 Swipe horizontally for full trip ledger</span>
+        <span class="text-[10px] text-slate-400">Scroll &rarr;</span>
+      </div>
+
       <!-- Table -->
       <div class="overflow-x-auto table-containment-region">
         <table class="w-full text-left text-xs whitespace-nowrap">
@@ -269,17 +275,19 @@
               <th class="py-3 px-4 text-right">Freight</th>
               <th class="py-3 px-4 text-right">Balance Due</th>
               <th class="py-3 px-4 text-center">Status</th>
+              <th class="py-3 px-4 text-center">Slip</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
             <tr
               v-for="trip in dashboardData.recent_trips || []"
               :key="trip.id"
-              @click="$router.push(`/trips/${trip.id}`)"
-              class="hover:bg-blue-50/40 cursor-pointer transition-colors"
+              class="hover:bg-blue-50/40 transition-colors"
             >
               <td class="py-3 px-4 font-black text-blue-600 font-mono-numbers">
-                #{{ trip.lr_no }}
+                <router-link :to="`/trips/${trip.id}`" class="hover:underline">
+                  #{{ trip.lr_no }}
+                </router-link>
               </td>
               <td class="py-3 px-4 text-slate-600 font-mono-numbers">
                 {{ formatDate(trip.booking_date) }}
@@ -303,6 +311,15 @@
               </td>
               <td class="py-3 px-4 text-center">
                 <StatusPill :status="trip.balance_status" />
+              </td>
+              <td class="py-3 px-4 text-center">
+                <router-link
+                  :to="`/lorry-slip?trip=${trip.id}`"
+                  class="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-700 text-xs font-bold transition-colors border border-indigo-200 inline-flex items-center"
+                  title="Generate Lorry Slip PDF"
+                >
+                  <Printer class="w-3.5 h-3.5" />
+                </router-link>
               </td>
             </tr>
           </tbody>
@@ -329,6 +346,7 @@ import {
   AlertCircle,
   MapPin,
   ArrowRight,
+  Printer,
 } from '@lucide/vue'
 import api from '../services/api'
 import { formatINR, formatNumber, formatDate } from '../utils/formatters'

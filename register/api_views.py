@@ -17,6 +17,7 @@ from .models import (
 )
 from .services.calculations import calculate_trip_totals, get_financial_year, to_decimal
 from .services.vehicle import normalize_vehicle_reg
+from .services.slip_pdf import generate_lorry_slip_pdf
 
 
 class NDBTJsonEncoder(json.JSONEncoder):
@@ -1028,3 +1029,71 @@ def report_pending_operations_api(request):
             'overdue_uncollected': trips_qs.filter(balance_status=Trip.BalanceStatus.NOT_RECEIVED).count(),
         }
     })
+
+
+# ---------------------------------------------------------------------------
+# Lorry Loading Slip PDF Generator
+# ---------------------------------------------------------------------------
+
+@require_http_methods(['GET', 'HEAD'])
+def trip_slip_pdf_api(request, pk):
+    """
+    Generates and returns an authentic NDBT Lorry Loading Slip PDF for a trip.
+    Matches either by database primary key or by lr_no.
+    """
+    trip = Trip.objects.filter(Q(pk=pk) | Q(lr_no=pk)).select_related('consignor', 'lorry_owner', 'vehicle').first()
+    if not trip:
+        return api_error('Trip not found', status=404)
+
+    # Saved custom slip data in raw_import if any
+    raw_data = trip.raw_import or {}
+    saved_slip = raw_data.get('slip_data', {}) if isinstance(raw_data, dict) else {}
+
+    slip_data = {
+        'slip_no': request.GET.get('slip_no') or trip.lr_no,
+        'date': request.GET.get('date') or (trip.booking_date.strftime('%d/%m/%Y') if trip.booking_date else ''),
+        'customer_name': request.GET.get('customer_name') or trip.consignor.name,
+        'customer_city': request.GET.get('customer_city') or trip.consignor.city,
+        'truck_no': request.GET.get('truck_no') or trip.vehicle.reg_no,
+        'owner_name': request.GET.get('owner_name') or (trip.lorry_owner.name if trip.lorry_owner else ''),
+        'address': request.GET.get('address') or (trip.lorry_owner.address if trip.lorry_owner else '') or '',
+        'driver_name': request.GET.get('driver_name') or saved_slip.get('driver_name', ''),
+        'lic_no': request.GET.get('lic_no') or saved_slip.get('lic_no', ''),
+        'goods_particulars': request.GET.get('goods_particulars') or saved_slip.get('goods_particulars', 'P. Goods'),
+        'weight': request.GET.get('weight') or saved_slip.get('weight', ''),
+        'destination': request.GET.get('destination') or trip.destination,
+        'origin': request.GET.get('origin') or trip.origin,
+        'to_place': request.GET.get('to_place') or trip.destination,
+        'rate': request.GET.get('rate') or int(trip.freight) if trip.freight else '',
+        'advance': request.GET.get('advance') or int(trip.advance) if trip.advance else '',
+        'balance': request.GET.get('balance') or int(trip.balance) if trip.balance else '',
+    }
+
+    pdf_bytes = generate_lorry_slip_pdf(slip_data)
+    
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    filename = f"NDBT_Slip_{trip.lr_no}.pdf"
+    disposition = 'attachment' if request.GET.get('download') == '1' else 'inline'
+    response['Content-Disposition'] = f'{disposition}; filename="{filename}"'
+    return response
+
+
+@csrf_exempt
+@require_http_methods(['POST'])
+def custom_slip_pdf_api(request):
+    """
+    Accepts arbitrary JSON slip details and returns the generated PDF.
+    """
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        return api_error('Invalid JSON body')
+
+    pdf_bytes = generate_lorry_slip_pdf(data)
+    
+    slip_no = data.get('slip_no') or data.get('lr_no') or 'Custom'
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    filename = f"NDBT_Slip_{slip_no}.pdf"
+    disposition = 'attachment' if request.GET.get('download') == '1' else 'inline'
+    response['Content-Disposition'] = f'{disposition}; filename="{filename}"'
+    return response

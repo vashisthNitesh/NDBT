@@ -9,6 +9,7 @@ import TdsRegisterView from '../views/TdsRegisterView.vue'
 import MonthlySummaryView from '../views/MonthlySummaryView.vue'
 import PendingOperationsView from '../views/PendingOperationsView.vue'
 import MastersView from '../views/MastersView.vue'
+import LorrySlipView from '../views/LorrySlipView.vue'
 
 const routes = [
   {
@@ -30,6 +31,11 @@ const routes = [
     path: '/trips/:id',
     name: 'trip-detail',
     component: TripFormView,
+  },
+  {
+    path: '/lorry-slip',
+    name: 'lorry-slip',
+    component: LorrySlipView,
   },
   {
     path: '/reports/party-outstanding',

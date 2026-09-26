@@ -55,6 +55,7 @@
             <div class="space-y-1">
               <router-link
                 to="/trips"
+                @click="isMobileOpen = false"
                 class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-colors"
                 :class="isCurrentRoute('/trips') ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'"
               >
@@ -64,10 +65,24 @@
 
               <router-link
                 to="/trips/new"
+                @click="isMobileOpen = false"
                 class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-colors text-emerald-700 bg-emerald-50/60 hover:bg-emerald-100/70 border border-emerald-200/50"
               >
                 <Plus class="w-4 h-4 text-emerald-600" />
                 <span>Book New Trip (LR)</span>
+              </router-link>
+
+              <router-link
+                to="/lorry-slip"
+                @click="isMobileOpen = false"
+                class="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-colors"
+                :class="isCurrentRoute('/lorry-slip') ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'"
+              >
+                <div class="flex items-center gap-3">
+                  <Printer class="w-4 h-4 text-indigo-600" />
+                  <span>Lorry Loading Slip</span>
+                </div>
+                <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">PDF</span>
               </router-link>
             </div>
           </div>
@@ -198,30 +213,30 @@
     <!-- Main Content Area -->
     <div class="flex-1 lg:pl-72 flex flex-col min-w-0">
       <!-- Top Navbar -->
-      <header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-30">
-        <div class="flex items-center gap-4">
+      <header class="h-16 bg-white border-b border-slate-200 px-3 sm:px-6 flex items-center justify-between sticky top-0 z-30">
+        <div class="flex items-center gap-2 sm:gap-4 flex-1 min-w-0 pr-2">
           <button
             @click="isMobileOpen = true"
-            class="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100"
+            class="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 shrink-0"
           >
             <Menu class="w-5 h-5" />
           </button>
 
-          <!-- Search Bar -->
-          <div class="relative w-64 md:w-80">
+          <!-- Search Bar with responsive width -->
+          <div class="relative w-full max-w-[180px] xs:max-w-[220px] sm:max-w-xs md:max-w-sm">
             <Search class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               v-model="globalSearch"
               @keyup.enter="handleSearch"
-              placeholder="Search LR, vehicle, party..."
-              class="w-full pl-9 pr-4 py-1.5 text-xs bg-slate-100 hover:bg-slate-100/80 focus:bg-white border border-transparent focus:border-blue-500 rounded-xl outline-hidden transition-all text-slate-800 placeholder-slate-400"
+              placeholder="Search LR, vehicle..."
+              class="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-100 hover:bg-slate-100/80 focus:bg-white border border-transparent focus:border-blue-500 rounded-xl outline-hidden transition-all text-slate-800 placeholder-slate-400"
             />
           </div>
         </div>
 
-        <div class="flex items-center gap-3">
-          <div class="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-blue-700 text-xs font-bold">
+        <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div class="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-blue-700 text-xs font-bold">
             <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
             FY 2026-27 Active
           </div>
@@ -236,8 +251,8 @@
         </div>
       </header>
 
-      <!-- Page Outlet -->
-      <main class="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto">
+      <!-- Page Outlet with Mobile Safety Padding -->
+      <main class="flex-1 p-3.5 sm:p-6 md:p-8 max-w-7xl w-full mx-auto min-w-0 overflow-x-hidden">
         <router-view />
       </main>
     </div>
@@ -262,6 +277,7 @@ import {
   Plus,
   Menu,
   X,
+  Printer,
 } from '@lucide/vue'
 
 const route = useRoute()

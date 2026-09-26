@@ -1,15 +1,15 @@
 <template>
   <div class="max-w-5xl mx-auto space-y-6">
     <!-- Header -->
-    <div class="flex items-center justify-between gap-4">
-      <div>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="min-w-0 flex-1">
         <div class="flex items-center gap-2 mb-1">
           <router-link to="/trips" class="text-xs font-bold text-slate-500 hover:text-blue-600 flex items-center gap-1">
             <ArrowLeft class="w-3.5 h-3.5" />
             <span>Back to Trip Register</span>
           </router-link>
         </div>
-        <h1 class="text-2xl font-black text-slate-900 tracking-tight">
+        <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight break-words">
           {{ isEditMode ? `LR #${form.lr_no} - ${form.vehicle || 'Trip Details'}` : 'Book New Trip (LR Entry)' }}
         </h1>
         <p class="text-xs text-slate-500 mt-0.5">
@@ -17,7 +17,17 @@
         </p>
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 flex-wrap">
+        <button
+          v-if="isEditMode"
+          type="button"
+          @click="activeTab = 'slip'"
+          class="px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold border border-indigo-200 transition-colors flex items-center gap-1.5"
+        >
+          <Printer class="w-3.5 h-3.5" />
+          <span>Lorry Slip (PDF)</span>
+        </button>
+
         <button
           v-if="isEditMode"
           type="button"
@@ -114,6 +124,16 @@
         :class="activeTab === 'documents' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'"
       >
         📄 POD & Documents ({{ tripData.documents?.length || 0 }})
+      </button>
+
+      <button
+        v-if="isEditMode"
+        type="button"
+        @click="activeTab = 'slip'"
+        class="pb-3 px-4 text-xs font-bold transition-all border-b-2 whitespace-nowrap flex items-center gap-1.5"
+        :class="activeTab === 'slip' ? 'border-blue-600 text-blue-600 font-black' : 'border-transparent text-slate-500 hover:text-slate-800'"
+      >
+        <span>🎫 Lorry Slip (PDF)</span>
       </button>
     </div>
 
@@ -517,16 +537,135 @@
         </div>
       </div>
     </div>
+
+    <!-- Tab 7: Lorry Loading Slip PDF Generator -->
+    <div v-show="activeTab === 'slip'" class="space-y-6">
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h3 class="text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-2">
+            <span>Official Lorry Loading Slip (Challan)</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">Authentic NDBT Format</span>
+          </h3>
+          <p class="text-xs text-slate-500 mt-0.5">
+            Auto-populated from LR #{{ form.lr_no }}. You can customize goods, weight, or driver info before printing.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          <router-link
+            :to="`/lorry-slip?trip=${route.params.id}`"
+            class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors"
+          >
+            Open Standalone Slip Page
+          </router-link>
+
+          <button
+            type="button"
+            @click="printSlip"
+            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition-colors shadow-sm"
+          >
+            <Printer class="w-4 h-4" />
+            <span>Print Slip</span>
+          </button>
+
+          <button
+            type="button"
+            @click="downloadSlipPdf"
+            :disabled="isGeneratingPdf"
+            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors shadow-sm shadow-blue-500/20 disabled:opacity-50"
+          >
+            <Download class="w-4 h-4" />
+            <span>{{ isGeneratingPdf ? 'Generating...' : 'Download PDF' }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Slip Fields Customization -->
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+        <h4 class="text-xs font-black uppercase tracking-wider text-slate-700 mb-3">
+          Customize Slip Details (Driver, Goods, Weight)
+        </h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">
+              Goods Particulars
+            </label>
+            <input
+              type="text"
+              v-model="slipFields.goods_particulars"
+              placeholder="P. Goods"
+              class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-hidden focus:border-blue-500"
+            />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">
+              Weight
+            </label>
+            <input
+              type="text"
+              v-model="slipFields.weight"
+              placeholder="7 mt."
+              class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-hidden focus:border-blue-500 font-mono"
+            />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">
+              Driver's Name
+            </label>
+            <input
+              type="text"
+              v-model="slipFields.driver_name"
+              placeholder="Driver Name"
+              class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-hidden focus:border-blue-500"
+            />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">
+              Driver License No.
+            </label>
+            <input
+              type="text"
+              v-model="slipFields.lic_no"
+              placeholder="DL-XXXXX"
+              class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-hidden focus:border-blue-500 font-mono"
+            />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">
+              Authorised Signatory
+            </label>
+            <select
+              v-model="slipFields.signatory"
+              class="w-full px-3 py-1.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-hidden focus:border-blue-500 cursor-pointer"
+            >
+              <option value="Dharambir Vashisth">Dharambir Vashisth</option>
+              <option value="Satbir Vashisth">Satbir Vashisth</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Slip Preview -->
+      <div class="flex justify-center p-2 bg-slate-100/70 border border-slate-200 rounded-2xl overflow-x-auto">
+        <LorrySlipDocument :slip-data="computedSlipData" />
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeft } from '@lucide/vue'
+import { ArrowLeft, Printer, Download } from '@lucide/vue'
+import html2pdf from 'html2pdf.js'
 import api from '../services/api'
 import { formatINR, formatDate } from '../utils/formatters'
 import LiveMarginCalculator from '../components/common/LiveMarginCalculator.vue'
+import LorrySlipDocument from '../components/common/LorrySlipDocument.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -630,6 +769,65 @@ async function deleteTrip() {
   } catch (err) {
     alertMessage.value = 'Failed to delete trip'
     alertSuccess.value = false
+  }
+}
+
+// Lorry Slip state & helpers
+const isGeneratingPdf = ref(false)
+const slipFields = reactive({
+  driver_name: '',
+  lic_no: '',
+  goods_particulars: 'P. Goods',
+  weight: '7 mt.',
+  address: '',
+  signatory: 'Dharambir Vashisth',
+})
+
+const computedSlipData = computed(() => ({
+  slip_no: form.value.lr_no,
+  date: form.value.booking_date,
+  customer_name: form.value.consignor,
+  customer_city: '',
+  truck_no: form.value.vehicle,
+  owner_name: form.value.transporter,
+  address: slipFields.address,
+  driver_name: slipFields.driver_name,
+  lic_no: slipFields.lic_no,
+  goods_particulars: slipFields.goods_particulars,
+  weight: slipFields.weight,
+  destination: form.value.destination,
+  origin: form.value.origin,
+  to_place: form.value.destination,
+  rate: form.value.freight,
+  advance: form.value.advance,
+  balance: (Number(form.value.freight) || 0) - (Number(form.value.advance) || 0),
+  signatory: slipFields.signatory,
+}))
+
+function printSlip() {
+  window.print()
+}
+
+async function downloadSlipPdf() {
+  const element = document.getElementById('lorry-slip-print-area')
+  if (!element) return
+
+  isGeneratingPdf.value = true
+  const opt = {
+    margin: [10, 10, 10, 10],
+    filename: `NDBT_Slip_${form.value.lr_no || 'Trip'}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2.5, useCORS: true, logging: false },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  }
+
+  try {
+    await html2pdf().set(opt).from(element).save()
+  } catch (err) {
+    console.error('PDF generation error:', err)
+    window.open(api.getTripSlipPdfUrl(route.params.id, { download: '1' }), '_blank')
+  } finally {
+    isGeneratingPdf.value = false
   }
 }
 

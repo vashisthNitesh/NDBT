@@ -154,6 +154,12 @@
 
     <!-- Data Table -->
     <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden">
+      <!-- Mobile Table Swipe Hint -->
+      <div class="sm:hidden px-3.5 py-1.5 text-[11px] font-semibold text-slate-500 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
+        <span>👉 Swipe horizontally for full trip ledger</span>
+        <span class="text-[10px] text-slate-400">Scroll &rarr;</span>
+      </div>
+
       <div class="overflow-x-auto table-containment-region">
         <table class="w-full text-left text-xs whitespace-nowrap">
           <thead class="bg-slate-50/90 text-[11px] font-black uppercase tracking-wider text-slate-500 border-b border-slate-200">
@@ -243,12 +249,22 @@
                 </span>
               </td>
               <td class="py-3 px-4 text-center">
-                <router-link
-                  :to="`/trips/${t.id}`"
-                  class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-700 text-xs font-bold transition-colors"
-                >
-                  View / Edit
-                </router-link>
+                <div class="flex items-center justify-center gap-1.5">
+                  <router-link
+                    :to="`/trips/${t.id}`"
+                    class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-700 text-xs font-bold transition-colors"
+                  >
+                    View / Edit
+                  </router-link>
+                  <button
+                    type="button"
+                    @click="openSlipModal(t)"
+                    class="p-1 rounded-lg bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-700 text-xs font-bold transition-colors border border-indigo-200"
+                    title="Print / Generate Lorry Slip (PDF)"
+                  >
+                    <Printer class="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -283,16 +299,88 @@
         </div>
       </div>
     </div>
+
+    <!-- Quick Lorry Slip Modal Preview -->
+    <div
+      v-if="activeSlipTrip"
+      class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-xs overflow-y-auto"
+    >
+      <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-3xl my-auto overflow-hidden flex flex-col max-h-[92vh]">
+        <!-- Modal Top Bar -->
+        <div class="p-4 sm:px-6 bg-slate-900 text-white flex items-center justify-between shrink-0">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-400 animate-pulse"></span>
+            <h3 class="text-xs sm:text-sm font-black uppercase tracking-wider text-white">
+              Lorry Loading Slip — LR #{{ activeSlipTrip.lr_no }}
+            </h3>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <router-link
+              :to="`/lorry-slip?trip=${activeSlipTrip.id}`"
+              class="hidden sm:inline-flex px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700"
+            >
+              Open in Editor
+            </router-link>
+
+            <div class="hidden xs:flex items-center gap-1.5 text-xs">
+              <span class="text-[10px] text-slate-400 font-bold uppercase">Sign:</span>
+              <select
+                v-model="modalSignatory"
+                class="bg-slate-800 text-white text-xs font-bold border border-slate-700 rounded-xl px-2 py-1 outline-hidden cursor-pointer"
+              >
+                <option value="Dharambir Vashisth">Dharambir Vashisth</option>
+                <option value="Satbir Vashisth">Satbir Vashisth</option>
+              </select>
+            </div>
+
+            <button
+              type="button"
+              @click="printModalSlip"
+              class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold border border-slate-700 flex items-center gap-1.5"
+            >
+              <Printer class="w-3.5 h-3.5" />
+              <span>Print</span>
+            </button>
+
+            <button
+              type="button"
+              @click="downloadModalSlip"
+              :disabled="modalGeneratingPdf"
+              class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm shadow-blue-500/20 disabled:opacity-50"
+            >
+              <Download class="w-3.5 h-3.5" />
+              <span>{{ modalGeneratingPdf ? 'Generating...' : 'PDF' }}</span>
+            </button>
+
+            <button
+              type="button"
+              @click="closeSlipModal"
+              class="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 ml-1"
+            >
+              <X class="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        <!-- Modal Slip Body (Scrollable) -->
+        <div class="p-2 sm:p-6 overflow-y-auto flex-1 bg-slate-100/60 flex justify-center">
+          <LorrySlipDocument :slip-data="modalSlipData" />
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Plus, Search } from '@lucide/vue'
+import { Plus, Search, Printer, Download, X } from '@lucide/vue'
+import html2pdf from 'html2pdf.js'
 import api from '../services/api'
 import { formatINR, formatNumber, formatDate } from '../utils/formatters'
 import StatusPill from '../components/common/StatusPill.vue'
+import LorrySlipDocument from '../components/common/LorrySlipDocument.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -394,6 +482,74 @@ watch(() => route.query, (newQuery) => {
   if (newQuery.fy !== undefined) filters.value.fy = newQuery.fy
   fetchTrips()
 })
+
+// Quick Slip Modal state & handlers
+const activeSlipTrip = ref(null)
+const modalGeneratingPdf = ref(false)
+const modalSignatory = ref('Dharambir Vashisth')
+
+const modalSlipData = computed(() => {
+  if (!activeSlipTrip.value) return {}
+  const t = activeSlipTrip.value
+  return {
+    slip_no: t.lr_no,
+    date: t.booking_date,
+    customer_name: t.consignor,
+    customer_city: '',
+    truck_no: t.vehicle,
+    owner_name: t.transporter,
+    address: '',
+    driver_name: '',
+    lic_no: '',
+    goods_particulars: 'P. Goods',
+    weight: '7 mt.',
+    destination: t.destination,
+    origin: t.origin,
+    to_place: t.destination,
+    rate: t.freight,
+    advance: t.advance,
+    balance: t.balance || (Number(t.freight || 0) - Number(t.advance || 0)),
+    signatory: modalSignatory.value,
+  }
+})
+
+function openSlipModal(trip) {
+  activeSlipTrip.value = trip
+}
+
+function closeSlipModal() {
+  activeSlipTrip.value = null
+}
+
+function printModalSlip() {
+  window.print()
+}
+
+async function downloadModalSlip() {
+  const element = document.getElementById('lorry-slip-print-area')
+  if (!element) return
+
+  modalGeneratingPdf.value = true
+  const lr = activeSlipTrip.value?.lr_no || 'Trip'
+  const opt = {
+    margin: [10, 10, 10, 10],
+    filename: `NDBT_Slip_${lr}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2.5, useCORS: true, logging: false },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  }
+
+  try {
+    await html2pdf().set(opt).from(element).save()
+  } catch (err) {
+    console.error('PDF generation error:', err)
+    if (activeSlipTrip.value?.id) {
+      window.open(api.getTripSlipPdfUrl(activeSlipTrip.value.id, { download: '1' }), '_blank')
+    }
+  } finally {
+    modalGeneratingPdf.value = false
+  }
+}
 
 onMounted(() => {
   fetchTrips()

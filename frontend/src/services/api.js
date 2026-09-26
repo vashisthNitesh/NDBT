@@ -39,6 +39,15 @@ export default {
     return client.delete(`/trips/${id}/`)
   },
 
+  getTripSlipPdfUrl(id, params = {}) {
+    const query = new URLSearchParams(params).toString()
+    return `/api/trips/${id}/slip-pdf/${query ? '?' + query : ''}`
+  },
+
+  generateCustomSlipPdf(payload) {
+    return client.post('/trips/custom-slip-pdf/', payload, { responseType: 'blob' })
+  },
+
   // Masters
   getCustomers(q = '') {
     return client.get('/masters/customers/', { params: { q } })

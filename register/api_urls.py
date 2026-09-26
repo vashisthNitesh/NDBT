@@ -11,6 +11,8 @@ urlpatterns = [
     # Trips CRUD & listing
     path('trips/', api_views.trips_collection_api, name='api_trips_collection'),
     path('trips/<int:pk>/', api_views.trip_detail_api, name='api_trip_detail'),
+    path('trips/<int:pk>/slip-pdf/', api_views.trip_slip_pdf_api, name='api_trip_slip_pdf'),
+    path('trips/custom-slip-pdf/', api_views.custom_slip_pdf_api, name='api_custom_slip_pdf'),
 
     # Masters
     path('masters/customers/', api_views.master_customers_api, name='api_master_customers'),

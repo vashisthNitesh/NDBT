@@ -1,8 +1,8 @@
 <template>
   <div class="bg-slate-900 text-white rounded-2xl p-5 shadow-lg border border-slate-800 mb-6">
-    <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-800">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 mb-4 border-b border-slate-800">
       <div class="flex items-center gap-2">
-        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
         <h4 class="text-xs font-black uppercase tracking-wider text-slate-200">
           Live Financial Margin Engine
         </h4>
@@ -10,7 +10,7 @@
       </div>
 
       <!-- Quick TDS Buttons -->
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 flex-wrap">
         <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Quick TDS:</span>
         <button
           type="button"
@@ -32,40 +32,40 @@
     <!-- 3-Deck Live Margin Indicators -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <!-- 1. Advance Balance -->
-      <div class="p-4 rounded-xl bg-slate-800/80 border border-slate-700/80">
+      <div class="p-4 rounded-xl bg-slate-800/80 border border-slate-700/80 min-w-0">
         <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
           Advance Balance
         </span>
-        <div class="text-2xl font-black text-white font-mono-numbers">
+        <div class="text-xl sm:text-2xl font-black text-white font-mono-numbers truncate">
           {{ formatINR(calculatedAdvanceBalance) }}
         </div>
-        <span class="text-[11px] text-slate-400 block mt-1">
+        <span class="text-[11px] text-slate-400 block mt-1 break-words">
           Advance ({{ formatINR(advance) }}) - Comm - Lorry Adv - TDS
         </span>
       </div>
 
       <!-- 2. Freight Balance -->
-      <div class="p-4 rounded-xl bg-slate-800/80 border border-slate-700/80">
+      <div class="p-4 rounded-xl bg-slate-800/80 border border-slate-700/80 min-w-0">
         <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
           Freight Balance
         </span>
-        <div class="text-2xl font-black text-amber-400 font-mono-numbers">
+        <div class="text-xl sm:text-2xl font-black text-amber-400 font-mono-numbers truncate">
           {{ formatINR(calculatedBalance) }}
         </div>
-        <span class="text-[11px] text-slate-400 block mt-1">
+        <span class="text-[11px] text-slate-400 block mt-1 break-words">
           Contracted Freight ({{ formatINR(freight) }}) - Advance
         </span>
       </div>
 
       <!-- 3. Total Due -->
-      <div class="p-4 rounded-xl bg-emerald-950/40 border border-emerald-500/40">
+      <div class="p-4 rounded-xl bg-emerald-950/40 border border-emerald-500/40 min-w-0">
         <span class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider block mb-1">
           Total Net Due
         </span>
-        <div class="text-2xl font-black text-emerald-300 font-mono-numbers">
+        <div class="text-xl sm:text-2xl font-black text-emerald-300 font-mono-numbers truncate">
           {{ formatINR(calculatedTotalBalance) }}
         </div>
-        <span class="text-[11px] text-emerald-400/90 block mt-1">
+        <span class="text-[11px] text-emerald-400/90 block mt-1 break-words">
           Balance + Hamali Labour ({{ formatINR(labour) }}) + Detention ({{ formatINR(calculatedHolding) }})
         </span>
       </div>
