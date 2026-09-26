@@ -1067,6 +1067,7 @@ def trip_slip_pdf_api(request, pk):
         'rate': request.GET.get('rate') or int(trip.freight) if trip.freight else '',
         'advance': request.GET.get('advance') or int(trip.advance) if trip.advance else '',
         'balance': request.GET.get('balance') or int(trip.balance) if trip.balance else '',
+        'signatory': request.GET.get('signatory') or 'Dharambir Vashisth',
     }
 
     pdf_bytes = generate_lorry_slip_pdf(slip_data)

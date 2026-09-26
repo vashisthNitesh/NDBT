@@ -1,7 +1,5 @@
 import io
 import os
-from datetime import date
-from decimal import Decimal
 from django.conf import settings
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
@@ -11,44 +9,41 @@ from reportlab.lib.units import mm
 
 def generate_lorry_slip_pdf(data: dict) -> bytes:
     """
-    Generates a modern, refined, and executive NDBT Lorry Loading Slip PDF.
-    Features:
-      - Lord Ganesha modern auspicious emblem at top center
-      - Clean corporate header with NDBT badge and phone contacts
-      - Structured metadata bar (Slip No, Date)
-      - High-readability 2-column transit & commercial specifications grid
-      - Professional terms & authorized signature block
+    Generates a modern, refined, executive NDBT Lorry Loading Slip PDF
+    matching the web preview design pixel-for-pixel:
+      - NO outer page border
+      - Auspicious Lord Ganesha image at top center
+      - Address on top left, mobile numbers row-wise on top right
+      - Single-line title and subtitle
+      - Clean hairlines and pure white background
+      - Two-column structured specification grid
+      - Harmonized terms & dynamic signatory name
     """
     buffer = io.BytesIO()
     p = canvas.Canvas(buffer, pagesize=A4)
     page_w, page_h = A4
     
-    # Outer margins
-    margin_x = 12 * mm
-    margin_y = 12 * mm
+    # Outer content margins (No outer border is drawn around the page)
+    margin_x = 14 * mm
+    margin_y = 14 * mm
     slip_w = page_w - (2 * margin_x)
     right = margin_x + slip_w
     top = page_h - margin_y
     
-    # 1. Main Outer Clean Border with subtle professional hairline
-    p.setStrokeColor(colors.HexColor('#cbd5e1'))
-    p.setLineWidth(0.8)
-    p.rect(margin_x, margin_y, slip_w, page_h - (2 * margin_y))
+    curr_y = top
     
-    curr_y = top - 4 * mm
-    
-    # --- TOP HEADER ROW ---
-    # Center: Auspicious Lord Ganesha Image
-    ganesha_w = 20 * mm
-    ganesha_h = 17.5 * mm
+    # --- 1. TOP SACRED HEADER: LORD GANESHA & HINDI SALUTATION ---
+    ganesha_w = 21 * mm
+    ganesha_h = 21.8 * mm  # aspect ratio from 464 x 481
     ganesha_x = margin_x + (slip_w / 2) - (ganesha_w / 2)
     ganesha_y = curr_y - ganesha_h
     
-    # Find ganesha image path
     img_path = None
     possible_paths = [
+        os.path.join(settings.BASE_DIR, 'static', 'img', 'ganesha_header.png'),
+        os.path.join(settings.BASE_DIR, 'frontend', 'public', 'ganesha_header.png'),
+        os.path.join(settings.BASE_DIR, 'frontend', 'src', 'assets', 'ganesha_header.png'),
         os.path.join(settings.BASE_DIR, 'static', 'img', 'ganesha.png'),
-        os.path.join(settings.BASE_DIR, 'frontend', 'public', 'ganesha.png'),
     ]
     for pth in possible_paths:
         if os.path.exists(pth):
@@ -58,171 +53,184 @@ def generate_lorry_slip_pdf(data: dict) -> bytes:
     if img_path:
         p.drawImage(img_path, ganesha_x, ganesha_y, width=ganesha_w, height=ganesha_h, mask='auto')
     
-    # Left: Office Address (No 'Booking Station' label)
-    logo_left = margin_x + 4 * mm
+    curr_y -= (ganesha_h + 2.5 * mm)
+    
+    # --- 2. OFFICE ADDRESS & MOBILE CONTACTS ROW ---
+    # Left: Office Address (3 lines matching preview)
     p.setFillColor(colors.HexColor('#0f172a'))
     p.setFont("Helvetica-Bold", 7.5)
-    p.drawString(logo_left, curr_y - 4 * mm, "Shop No. 212, Sai Leela Arcade No. 2,")
-    p.setFont("Helvetica", 7)
+    p.drawString(margin_x, curr_y - 3.2 * mm, "Shop No. 212, 2nd Floor, Sai Leela Arcade No. 2,")
+    p.setFont("Helvetica", 7.0)
     p.setFillColor(colors.HexColor('#475569'))
-    p.drawString(logo_left, curr_y - 7.5 * mm, "Opp. Hyundai Showroom, N.H. No. 8,")
-    p.drawString(logo_left, curr_y - 11 * mm, "Morai Fatak, Vapi - 396 191 (Gujarat)")
+    p.drawString(margin_x, curr_y - 6.5 * mm, "Opp. Hyundai Showroom, Near Big Bazar, N.H. No. 8,")
+    p.drawString(margin_x, curr_y - 9.8 * mm, "Morai Fatak, Vapi - 396 191. Dist. Valsad (Gujarat)")
     
-    # Right: Mobile Contacts Row-Wise (No landline)
-    phone_right = right - 4 * mm
-    p.setFont("Helvetica-Bold", 7.8)
+    # Right: Mobile Contacts Row-Wise (2 lines, aligned with labels)
+    p.setFont("Helvetica", 7.0)
+    p.setFillColor(colors.HexColor('#64748b'))
+    p.drawRightString(right - 26 * mm, curr_y - 4.5 * mm, "Mob:")
+    p.drawRightString(right - 26 * mm, curr_y - 8.5 * mm, "Mob:")
+    p.setFont("Helvetica-Bold", 8.0)
     p.setFillColor(colors.HexColor('#0f172a'))
-    p.drawRightString(phone_right, curr_y - 4.5 * mm, "Mob: +91 98795 86221")
-    p.drawRightString(phone_right, curr_y - 9 * mm, "Mob: +91 93769 07046")
+    p.drawRightString(right, curr_y - 4.5 * mm, "+91 98795 86221")
+    p.drawRightString(right, curr_y - 8.5 * mm, "+91 93769 07046")
     
-    curr_y -= 21 * mm
+    curr_y -= 13 * mm
     
-    # Title: NEW DELHI BOMBAY TRANSPORT
-    p.setFont("Helvetica-Bold", 18)
+    # Hairline divider under contact row
+    p.setStrokeColor(colors.HexColor('#e2e8f0'))
+    p.setLineWidth(0.6)
+    p.line(margin_x, curr_y, right, curr_y)
+    
+    # Generous padding above title so it breathes and does not stick to the top hairline
+    curr_y -= 8.5 * mm
+    
+    # --- 3. BUSINESS TITLE & BRANDING ---
+    p.setFont("Helvetica-Bold", 17.5)
     p.setFillColor(colors.HexColor('#0f172a'))
     p.drawCentredString(margin_x + (slip_w / 2), curr_y, "NEW DELHI BOMBAY TRANSPORT")
     
-    curr_y -= 4.5 * mm
-    p.setFont("Helvetica-Bold", 8.5)
-    p.setFillColor(colors.HexColor('#475569'))
-    p.drawCentredString(margin_x + (slip_w / 2), curr_y, "TRANSPORT CONTRACTOR & COMMISSION AGENT")
+    # Clean padding between title and subtitle
+    curr_y -= 5.5 * mm
+    p.setFont("Helvetica-Bold", 7.8)
+    p.setFillColor(colors.HexColor('#64748b'))
+    p.drawCentredString(margin_x + (slip_w / 2), curr_y, "FLEET OWNERS, TRANSPORT CONTRACTORS & COMMISSION AGENTS")
     
-    curr_y -= 3.5 * mm
-    # Clean modern separator line
-    p.setStrokeColor(colors.HexColor('#0f172a'))
-    p.setLineWidth(1)
-    p.line(margin_x + 4 * mm, curr_y, right - 4 * mm, curr_y)
+    # Clean padding below subtitle before route banner
+    curr_y -= 5.0 * mm
     
-    curr_y -= 3.5 * mm
-    # Daily service banner
+    # Route coverage banner with subtle top and bottom lines
+    p.setStrokeColor(colors.HexColor('#e2e8f0'))
+    p.setLineWidth(0.6)
+    p.line(margin_x, curr_y, right, curr_y)
+    
+    curr_y -= 3.8 * mm
     p.setFont("Helvetica-Bold", 7.2)
-    p.setFillColor(colors.HexColor('#1e293b'))
+    p.setFillColor(colors.HexColor('#475569'))
     p.drawCentredString(
         margin_x + (slip_w / 2), curr_y,
         "Daily Fleet Service : DELHI • HARYANA • PUNJAB • RAJASTHAN • HIMACHAL • U.P. • PAN-INDIA FULL & PART LOAD"
     )
     
-    curr_y -= 3 * mm
-    # Address bar
-    p.setFont("Helvetica", 7)
-    p.setFillColor(colors.HexColor('#475569'))
-    p.drawCentredString(
-        margin_x + (slip_w / 2), curr_y,
-        "Shop No. 212, 2nd Floor, Sai Leela Arcade No. 2, Opp. Hyundai Showroom, Near Big Bazar, N.H. No. 8, Morai Fatak, Vapi - 396 191 (Gujarat)"
-    )
+    curr_y -= 2.8 * mm
+    p.line(margin_x, curr_y, right, curr_y)
     
-    curr_y -= 2.5 * mm
-    # Thin divider
-    p.setStrokeColor(colors.HexColor('#cbd5e1'))
-    p.setLineWidth(0.8)
-    p.line(margin_x + 4 * mm, curr_y, right - 4 * mm, curr_y)
+    curr_y -= 5.5 * mm
     
-    curr_y -= 6 * mm
-    
-    # --- DOCUMENT META BAR ---
+    # --- 3. DOCUMENT METADATA BAR ---
     bar_h = 7.5 * mm
-    p.setStrokeColor(colors.HexColor('#cbd5e1'))
+    p.setStrokeColor(colors.HexColor('#e2e8f0'))
     p.setLineWidth(0.6)
-    p.rect(margin_x + 4 * mm, curr_y - bar_h, slip_w - 8 * mm, bar_h, stroke=1, fill=0)
+    p.rect(margin_x, curr_y - bar_h, slip_w, bar_h, stroke=1, fill=0)
     
-    # Title badge in bar
+    # Left: Lorry Loading Slip
     p.setFont("Helvetica-Bold", 8.5)
     p.setFillColor(colors.HexColor('#0f172a'))
-    p.drawString(margin_x + 7 * mm, curr_y - 5 * mm, "LORRY LOADING SLIP (CHALLAN)")
+    p.drawString(margin_x + 3.5 * mm, curr_y - 5 * mm, "LORRY LOADING SLIP (CHALLAN)")
     
-    # Slip No
+    # Right: Slip No & Date matching preview
     slip_no = str(data.get('slip_no') or data.get('lr_no') or '')
-    p.setFont("Helvetica-Bold", 8)
+    raw_date = str(data.get('date') or data.get('booking_date') or '')
+    if '-' in raw_date:
+        parts = raw_date.split('-')
+        if len(parts) == 3 and len(parts[0]) == 4:
+            slip_date = f"{parts[2]}/{parts[1]}/{parts[0]}"
+        else:
+            slip_date = raw_date
+    else:
+        slip_date = raw_date
+        
+    p.setFont("Helvetica", 7.8)
     p.setFillColor(colors.HexColor('#64748b'))
-    p.drawString(margin_x + 85 * mm, curr_y - 5 * mm, "Slip / LR No :")
+    p.drawRightString(right - 58 * mm, curr_y - 5 * mm, "Challan No:")
     p.setFont("Helvetica-Bold", 9.5)
     p.setFillColor(colors.HexColor('#1e40af'))
-    p.drawString(margin_x + 106 * mm, curr_y - 5 * mm, f"#{slip_no}")
+    p.drawString(right - 56 * mm, curr_y - 5 * mm, f"#{slip_no}")
     
-    # Date
-    slip_date = str(data.get('date') or data.get('booking_date') or '')
-    p.setFont("Helvetica-Bold", 8)
+    p.setFont("Helvetica", 7.8)
     p.setFillColor(colors.HexColor('#64748b'))
-    p.drawString(right - 55 * mm, curr_y - 5 * mm, "Date :")
+    p.drawRightString(right - 26 * mm, curr_y - 5 * mm, "Date:")
     p.setFont("Helvetica-Bold", 8.5)
     p.setFillColor(colors.HexColor('#0f172a'))
-    p.drawString(right - 42 * mm, curr_y - 5 * mm, slip_date)
+    p.drawString(right - 24 * mm, curr_y - 5 * mm, slip_date)
     
-    curr_y -= (bar_h + 4 * mm)
+    curr_y -= (bar_h + 3.5 * mm)
     
-    # --- CONSIGNOR & DISPATCH STATEMENT BOX ---
-    box_h = 17 * mm
-    p.setStrokeColor(colors.HexColor('#cbd5e1'))
+    # --- 4. CONSIGNOR & DISPATCH AGREEMENT BOX ---
+    box_h = 16.5 * mm
+    p.setStrokeColor(colors.HexColor('#e2e8f0'))
     p.setLineWidth(0.6)
-    p.rect(margin_x + 4 * mm, curr_y - box_h, slip_w - 8 * mm, box_h, stroke=1, fill=0)
+    p.rect(margin_x, curr_y - box_h, slip_w, box_h, stroke=1, fill=0)
     
-    p.setFont("Helvetica-Bold", 8)
+    # Consignor Name
+    p.setFont("Helvetica-Bold", 7.8)
     p.setFillColor(colors.HexColor('#64748b'))
-    p.drawString(margin_x + 7 * mm, curr_y - 4.5 * mm, "TO, M/S. (CUSTOMER / CONSIGNOR):")
+    p.drawString(margin_x + 3.5 * mm, curr_y - 4.5 * mm, "To, M/s. (Consignor):")
     
     cust_str = str(data.get('customer_name') or data.get('consignor') or '')
     city_str = str(data.get('customer_city') or '')
-    if city_str and city_str not in cust_str:
+    if city_str and city_str.lower() not in cust_str.lower():
         cust_display = f"{cust_str}, {city_str}"
     else:
         cust_display = cust_str
         
     p.setFont("Helvetica-Bold", 9.5)
     p.setFillColor(colors.HexColor('#0f172a'))
-    p.drawString(margin_x + 58 * mm, curr_y - 4.5 * mm, cust_display.upper())
+    p.drawString(margin_x + 36 * mm, curr_y - 4.5 * mm, cust_display.upper())
     
-    # Dispatch statement
+    # Hairline divider inside consignor box
+    p.setStrokeColor(colors.HexColor('#f1f5f9'))
+    p.line(margin_x, curr_y - 7 * mm, right, curr_y - 7 * mm)
+    
+    # Dispatch statement (Properly wrapped, no broken words)
     truck_no = str(data.get('truck_no') or data.get('vehicle') or '')
     p.setFont("Helvetica", 7.2)
     p.setFillColor(colors.HexColor('#475569'))
-    dispatch_msg = (
-        f"We are sending herewith our Truck No. {truck_no} as per your booking instruction subject to standard "
-        f"terms and condition. Please inspect vehicle papers and load the truck after authorised signature."
-    )
-    p.drawString(margin_x + 7 * mm, curr_y - 10 * mm, dispatch_msg[:105])
-    p.drawString(margin_x + 7 * mm, curr_y - 13.5 * mm, dispatch_msg[105:])
+    msg_line1 = f"We are sending herewith Motor Truck No. {truck_no} as per your booking instruction subject to standard"
+    msg_line2 = "terms and conditions. Please inspect vehicle registration, fitness and permit papers before loading."
+    p.drawString(margin_x + 3.5 * mm, curr_y - 10.5 * mm, msg_line1)
+    p.drawString(margin_x + 3.5 * mm, curr_y - 14 * mm, msg_line2)
     
-    curr_y -= (box_h + 4.5 * mm)
+    curr_y -= (box_h + 3.5 * mm)
     
-    # --- STRUCTURED 2-COLUMN SPECIFICATIONS MATRIX ---
-    grid_w = slip_w - 8 * mm
-    col_w = (grid_w - 4 * mm) / 2
-    col1_x = margin_x + 4 * mm
-    col2_x = col1_x + col_w + 4 * mm
+    # --- 5. STRUCTURED 2-COLUMN SPECIFICATIONS MATRIX ---
+    grid_w = slip_w
+    col_w = (grid_w - 3.5 * mm) / 2
+    col1_x = margin_x
+    col2_x = col1_x + col_w + 3.5 * mm
     
-    # Column 1: Fleet & Transit Details
-    p.setStrokeColor(colors.HexColor('#cbd5e1'))
+    # Column Headers (White background, light borders)
+    hdr_h = 6.5 * mm
+    p.setStrokeColor(colors.HexColor('#e2e8f0'))
     p.setLineWidth(0.6)
-    p.rect(col1_x, curr_y - 6 * mm, col_w, 6 * mm, stroke=1, fill=0)
+    p.rect(col1_x, curr_y - hdr_h, col_w, hdr_h, stroke=1, fill=0)
+    p.rect(col2_x, curr_y - hdr_h, col_w, hdr_h, stroke=1, fill=0)
+    
     p.setFillColor(colors.HexColor('#0f172a'))
     p.setFont("Helvetica-Bold", 7.5)
-    p.drawString(col1_x + 4 * mm, curr_y - 4.2 * mm, "1. FLEET & TRANSIT PARTICULARS")
+    p.drawString(col1_x + 3.5 * mm, curr_y - 4.5 * mm, "1. Fleet & Transit Details")
+    p.drawString(col2_x + 3.5 * mm, curr_y - 4.5 * mm, "2. Commercial & Cargo Terms")
     
-    # Header 2: Commercial Terms
-    p.rect(col2_x, curr_y - 6 * mm, col_w, 6 * mm, stroke=1, fill=0)
-    p.setFillColor(colors.HexColor('#0f172a'))
-    p.setFont("Helvetica-Bold", 7.5)
-    p.drawString(col2_x + 4 * mm, curr_y - 4.2 * mm, "2. CONSIGNMENT & COMMERCIAL TERMS")
-    
-    table_top = curr_y - 6 * mm
-    row_h = 7.5 * mm
+    table_top = curr_y - hdr_h
+    row_h = 7.2 * mm
     num_rows = 7
     total_table_h = row_h * num_rows
     
-    # Table background & borders
-    p.setStrokeColor(colors.HexColor('#cbd5e1'))
-    p.setLineWidth(0.8)
+    # Outer table outlines
+    p.setStrokeColor(colors.HexColor('#e2e8f0'))
+    p.setLineWidth(0.6)
     p.rect(col1_x, table_top - total_table_h, col_w, total_table_h, stroke=1, fill=0)
     p.rect(col2_x, table_top - total_table_h, col_w, total_table_h, stroke=1, fill=0)
     
+    # Column 1 Data (Labels matching preview)
     col1_data = [
-        ("Motor Truck No.", truck_no, True),
-        ("Owner's Name", data.get('owner_name') or data.get('transporter') or '-', False),
-        ("Owner Address", data.get('address') or 'Vapi / Valsad', False),
-        ("Driver's Name", data.get('driver_name') or '-', False),
-        ("Driver Lic No.", data.get('lic_no') or '-', False),
-        ("Route (From → To)", f"{data.get('origin') or '-'} → {data.get('to_place') or data.get('destination') or '-'}", False),
-        ("Final Destination", data.get('destination') or '-', False),
+        ("Truck No:", truck_no, True),
+        ("Fleet Owner:", data.get('owner_name') or data.get('transporter') or '-', False),
+        ("Address / Hub:", data.get('address') or 'Vapi / Valsad', False),
+        ("Driver Name:", data.get('driver_name') or '-', False),
+        ("Driver Lic No:", data.get('lic_no') or '-', False),
+        ("Route:", f"{data.get('origin') or '-'} → {data.get('to_place') or data.get('destination') or '-'}", False),
+        ("Destination:", data.get('destination') or '-', False),
     ]
     
     def fmt_inr(v):
@@ -234,98 +242,103 @@ def generate_lorry_slip_pdf(data: dict) -> bytes:
         except Exception:
             return f"Rs. {v}/-"
 
+    # Column 2 Data (Labels matching preview)
     col2_data = [
-        ("Goods Particulars", data.get('goods_particulars') or 'P. Goods', False),
-        ("Weight / Quantity", data.get('weight') or '-', False),
-        ("Rate per ton Rs.", fmt_inr(data.get('rate') or data.get('freight')), False),
-        ("Contracted Freight", fmt_inr(data.get('freight') or data.get('rate')), False),
-        ("Advance Paid", fmt_inr(data.get('advance')), False),
-        ("Balance Payable", fmt_inr(data.get('balance')), True),
-        ("Payment Mode / Status", "As per terms / Agreed", False),
+        ("Goods:", data.get('goods_particulars') or 'P. Goods', False),
+        ("Weight:", data.get('weight') or '-', False),
+        ("Freight Rate:", fmt_inr(data.get('rate') or data.get('freight')), False),
+        ("Total Freight:", fmt_inr(data.get('freight') or data.get('rate')), False),
+        ("Advance Paid:", fmt_inr(data.get('advance')), False),
+        ("Balance Payable:", fmt_inr(data.get('balance')), True),
+        ("Payment Terms:", "Subject to safe delivery", False),
     ]
     
-    # Draw Row entries
+    # Draw Row Entries
     for i in range(num_rows):
         ry = table_top - (i * row_h)
-        # Horizontal dividers
-        p.setStrokeColor(colors.HexColor('#f1f5f9'))
-        p.setLineWidth(0.5)
-        p.line(col1_x, ry, col1_x + col_w, ry)
-        p.line(col2_x, ry, col2_x + col_w, ry)
         
-        # Column 1 cell
+        # Subtle horizontal divider
+        if i > 0:
+            p.setStrokeColor(colors.HexColor('#f1f5f9'))
+            p.setLineWidth(0.5)
+            p.line(col1_x, ry, col1_x + col_w, ry)
+            p.line(col2_x, ry, col2_x + col_w, ry)
+            
+        # Column 1 Cell
         l1, v1, is_b1 = col1_data[i]
-        p.setFont("Helvetica-Bold", 7.2)
-        p.setFillColor(colors.HexColor('#475569'))
-        p.drawString(col1_x + 3 * mm, ry - 5 * mm, l1)
-        p.drawString(col1_x + 33 * mm, ry - 5 * mm, ":")
+        p.setFont("Helvetica", 7.2)
+        p.setFillColor(colors.HexColor('#64748b'))
+        p.drawString(col1_x + 3.5 * mm, ry - 4.8 * mm, l1)
         
         if is_b1:
-            p.setFont("Helvetica-Bold", 9)
+            p.setFont("Helvetica-Bold", 8.5)
             p.setFillColor(colors.HexColor('#1e40af'))
         else:
-            p.setFont("Helvetica", 7.5)
+            p.setFont("Helvetica-Bold" if i == 1 or i == 6 else "Helvetica", 7.5)
             p.setFillColor(colors.HexColor('#0f172a'))
-        p.drawString(col1_x + 36 * mm, ry - 5 * mm, str(v1)[:30])
+        p.drawString(col1_x + 28 * mm, ry - 4.8 * mm, str(v1)[:36])
         
-        # Column 2 cell
+        # Column 2 Cell
         l2, v2, is_b2 = col2_data[i]
-        p.setFont("Helvetica-Bold", 7.2)
-        p.setFillColor(colors.HexColor('#475569'))
-        p.drawString(col2_x + 3 * mm, ry - 5 * mm, l2)
-        p.drawString(col2_x + 33 * mm, ry - 5 * mm, ":")
+        p.setFont("Helvetica", 7.2)
+        p.setFillColor(colors.HexColor('#64748b'))
+        p.drawString(col2_x + 3.5 * mm, ry - 4.8 * mm, l2)
         
         if is_b2:
-            # Highlight balance row with clean emerald tone
-            p.setFont("Helvetica-Bold", 9)
+            p.setFont("Helvetica-Bold", 8.5)
             p.setFillColor(colors.HexColor('#047857'))
         else:
             p.setFont("Helvetica-Bold" if "Rs." in str(v2) else "Helvetica", 7.5)
             p.setFillColor(colors.HexColor('#0f172a'))
-        p.drawString(col2_x + 36 * mm, ry - 5 * mm, str(v2)[:30])
+        p.drawString(col2_x + 28 * mm, ry - 4.8 * mm, str(v2)[:36])
         
-    curr_y = table_top - total_table_h - 6 * mm
+    curr_y = table_top - total_table_h - 4 * mm
     
-    # --- TERMS & SIGNATURE BLOCK (2 Columns) ---
-    footer_h = 32 * mm
-    p.setStrokeColor(colors.HexColor('#cbd5e1'))
+    # --- 6. REGULATORY TERMS & SIGNATURE BLOCK ---
+    footer_h = 28 * mm
+    p.setStrokeColor(colors.HexColor('#e2e8f0'))
     p.setLineWidth(0.6)
-    p.rect(margin_x + 4 * mm, curr_y - footer_h, slip_w - 8 * mm, footer_h, stroke=1, fill=0)
+    p.rect(margin_x, curr_y - footer_h, slip_w, footer_h, stroke=1, fill=0)
     
-    # Left: Terms & Instructions
-    term_x = margin_x + 7 * mm
+    # Left: Terms & Conditions (Matching web preview exactly)
+    term_x = margin_x + 3.5 * mm
     p.setFont("Helvetica-Bold", 7.5)
     p.setFillColor(colors.HexColor('#0f172a'))
-    p.drawString(term_x, curr_y - 5 * mm, "TERMS & OPERATIONAL CONDITIONS:")
-    
-    p.setFont("Helvetica", 6.8)
-    p.setFillColor(colors.HexColor('#334155'))
-    p.drawString(term_x, curr_y - 9 * mm, "1. We are not responsible for excess weight other than mentioned in this slip.")
-    p.drawString(term_x, curr_y - 13 * mm, "2. Please check and verify all truck papers (Permit, R.C. Book, Insurance, Driver Licence)")
-    p.drawString(term_x + 3 * mm, curr_y - 16.5 * mm, "before loading vehicle. Return vehicle empty if papers are not presented by driver.")
-    p.drawString(term_x, curr_y - 20.5 * mm, "3. Transporter agrees to deliver goods safely subject to usual force majeure conditions.")
-    p.drawString(term_x, curr_y - 24.5 * mm, "4. Subject to Vapi (Valsad, Gujarat) jurisdiction only.")
-    
-    # Right: Signature Box
-    sign_x = right - 65 * mm
-    p.setFont("Helvetica-Bold", 7.5)
-    p.setFillColor(colors.HexColor('#0f172a'))
-    p.drawRightString(right - 8 * mm, curr_y - 5 * mm, "For NEW DELHI BOMBAY TRANSPORT")
-    
-    # Signature line
-    p.setStrokeColor(colors.HexColor('#475569'))
-    p.setLineWidth(0.8)
-    p.line(sign_x, curr_y - 21 * mm, right - 8 * mm, curr_y - 21 * mm)
-    
-    signatory = str(data.get('signatory') or 'Dharambir Vashisth')
-    sign_center = sign_x + ((right - 8 * mm - sign_x) / 2)
-    p.setFont("Helvetica-Bold", 7.5)
-    p.setFillColor(colors.HexColor('#0f172a'))
-    p.drawCentredString(sign_center, curr_y - 24.5 * mm, f"({signatory})")
+    p.drawString(term_x, curr_y - 4.5 * mm, "Terms & Operational Conditions:")
     
     p.setFont("Helvetica", 6.8)
     p.setFillColor(colors.HexColor('#475569'))
-    p.drawCentredString(sign_center, curr_y - 28 * mm, "Authorised Signatory")
+    p.drawString(term_x, curr_y - 8.5 * mm, "1. We are not responsible for excess weight other than specified above.")
+    p.drawString(term_x, curr_y - 12.5 * mm, "2. Please check truck papers (Permit, R.C. Book, Insurance, Driver Licence) before loading.")
+    p.drawString(term_x + 2.5 * mm, curr_y - 15.5 * mm, "Return vehicle empty if papers are not presented.")
+    p.drawString(term_x, curr_y - 19.5 * mm, "3. All disputes are subject to Vapi (Valsad, Gujarat) jurisdiction only.")
+    
+    # Right: Signature Block (Matching web preview exactly)
+    sign_w = 52 * mm
+    sign_right = right - 4 * mm
+    sign_x = sign_right - sign_w
+    sign_center = sign_x + (sign_w / 2)
+    
+    p.setFont("Helvetica-Bold", 8)
+    p.setFillColor(colors.HexColor('#0f172a'))
+    p.drawRightString(sign_right, curr_y - 4.5 * mm, "For NEW DELHI BOMBAY TRANSPORT")
+    p.setFont("Helvetica", 6.8)
+    p.setFillColor(colors.HexColor('#64748b'))
+    p.drawRightString(sign_right, curr_y - 8 * mm, "Fleet Owners & Commission Agents")
+    
+    # Signature line
+    p.setStrokeColor(colors.HexColor('#94a3b8'))
+    p.setLineWidth(0.6)
+    p.line(sign_x, curr_y - 18 * mm, sign_right, curr_y - 18 * mm)
+    
+    signatory = str(data.get('signatory') or 'Dharambir Vashisth')
+    p.setFont("Helvetica-Bold", 7.8)
+    p.setFillColor(colors.HexColor('#0f172a'))
+    p.drawCentredString(sign_center, curr_y - 21.5 * mm, f"({signatory})")
+    
+    p.setFont("Helvetica", 6.8)
+    p.setFillColor(colors.HexColor('#64748b'))
+    p.drawCentredString(sign_center, curr_y - 25 * mm, "Authorised Signatory")
     
     p.showPage()
     p.save()

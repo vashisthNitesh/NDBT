@@ -805,27 +805,83 @@ const computedSlipData = computed(() => ({
 }))
 
 function printSlip() {
-  window.print()
+  const printArea = document.getElementById('lorry-slip-print-area')
+  if (!printArea) {
+    window.print()
+    return
+  }
+
+  let iframe = document.getElementById('slip-print-frame')
+  if (!iframe) {
+    iframe = document.createElement('iframe')
+    iframe.id = 'slip-print-frame'
+    iframe.style.position = 'fixed'
+    iframe.style.right = '0'
+    iframe.style.bottom = '0'
+    iframe.style.width = '0'
+    iframe.style.height = '0'
+    iframe.style.border = '0'
+    document.body.appendChild(iframe)
+  }
+
+  const doc = iframe.contentWindow.document
+  doc.open()
+  doc.write(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>NDBT Slip #${form.value.lr_no || ''}</title>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" href="/static/dist/assets/index.css" />
+        <style>
+          @page { size: A4 portrait; margin: 8mm; }
+          body { margin: 0; padding: 0; background: #fff !important; font-family: system-ui, -apple-system, sans-serif; }
+          .lorry-slip-wrapper { width: 100% !important; display: flex !important; justify-content: center !important; }
+          .lorry-slip-card {
+            width: 100% !important;
+            max-width: 100% !important;
+            border: none !important;
+            box-shadow: none !important;
+            margin: 0 auto;
+            padding: 16px !important;
+            background: #ffffff !important;
+            color: #0f172a !important;
+          }
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        </style>
+      </head>
+      <body>
+        ${printArea.outerHTML}
+      </body>
+    </html>
+  `)
+  doc.close()
+
+  setTimeout(() => {
+    iframe.contentWindow.focus()
+    iframe.contentWindow.print()
+  }, 350)
 }
 
 async function downloadSlipPdf() {
-  const element = document.getElementById('lorry-slip-print-area')
-  if (!element) return
-
   isGeneratingPdf.value = true
-  const opt = {
-    margin: [10, 10, 10, 10],
-    filename: `NDBT_Slip_${form.value.lr_no || 'Trip'}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2.5, useCORS: true, logging: false },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  }
 
   try {
-    await html2pdf().set(opt).from(element).save()
-  } catch (err) {
-    console.error('PDF generation error:', err)
-    window.open(api.getTripSlipPdfUrl(route.params.id, { download: '1' }), '_blank')
+    // Primary: Download vector PDF with current form and customizer fields
+    await api.downloadCustomSlipPdf(computedSlipData.value)
+  } catch (backendErr) {
+    console.warn('Backend PDF download error, attempting client fallback:', backendErr)
+    const element = document.getElementById('lorry-slip-print-area')
+    if (element) {
+      const opt = {
+        margin: [8, 8, 8, 8],
+        filename: `NDBT_Slip_${form.value.lr_no || 'Trip'}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      }
+      await html2pdf().set(opt).from(element).save()
+    }
   } finally {
     isGeneratingPdf.value = false
   }

@@ -1,21 +1,18 @@
 <template>
   <div class="lorry-slip-wrapper flex justify-center w-full">
-    <!-- Physical Document Container: Crisp Executive White Paper Format -->
+    <!-- Physical Document Container: Clean White Paper Format Without Outer Border -->
     <div
       id="lorry-slip-print-area"
-      class="lorry-slip-card bg-white text-slate-800 border border-slate-200 shadow-sm p-6 sm:p-8 w-full max-w-[760px] font-sans relative select-text"
+      class="lorry-slip-card bg-white text-slate-800 p-6 sm:p-8 w-full max-w-[760px] font-sans relative select-text"
       style="box-sizing: border-box;"
     >
-      <!-- Top Sacred Header: Centered Lord Ganesha Image -->
+      <!-- Top Sacred Header: Centered Lord Ganesha Image with Hindi Salutation -->
       <div class="flex flex-col items-center justify-center pb-2">
         <img
-          :src="ganeshaImg"
-          alt="Lord Ganesha"
-          class="w-14 sm:w-16 h-auto object-contain"
+          :src="ganeshaHeaderImg"
+          alt="Lord Ganesha - श्री गणेशाय नमः"
+          class="w-16 sm:w-20 h-auto object-contain"
         />
-        <div class="text-[11px] sm:text-xs font-semibold text-slate-700 tracking-widest mt-1">
-          ॥ श्री गणेशाय नमः ॥
-        </div>
       </div>
 
       <!-- Top Contact & Address Bar: Subtle Hairlines, No Grey Fill -->
@@ -250,7 +247,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import ganeshaImg from '../../assets/ganesha.png'
+import ganeshaHeaderImg from '../../assets/ganesha_header.png'
 
 const props = defineProps({
   slipData: {
@@ -312,7 +309,7 @@ function formatRupee(val) {
     width: 100% !important;
     max-width: 100% !important;
     box-shadow: none !important;
-    border: 1px solid #cbd5e1 !important;
+    border: none !important;
     padding: 16px !important;
     background: #fff !important;
     color: #0f172a !important;

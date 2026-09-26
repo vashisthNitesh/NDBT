@@ -48,6 +48,21 @@ export default {
     return client.post('/trips/custom-slip-pdf/', payload, { responseType: 'blob' })
   },
 
+  async downloadCustomSlipPdf(payload) {
+    const res = await client.post('/trips/custom-slip-pdf/?download=1', payload, { responseType: 'blob' })
+    const blob = new Blob([res.data], { type: 'application/pdf' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    const slipNo = payload.slip_no || payload.lr_no || 'Document'
+    link.download = `NDBT_Slip_${slipNo}.pdf`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+    return true
+  },
+
   // Masters
   getCustomers(q = '') {
     return client.get('/masters/customers/', { params: { q } })
