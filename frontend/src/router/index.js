@@ -68,13 +68,33 @@ const routes = [
     component: MastersView,
   },
   {
+    path: '/masters/vendors',
+    name: 'master-vendors',
+    component: MastersView,
+  },
+  {
     path: '/masters/transporters',
     name: 'master-transporters',
     component: MastersView,
   },
   {
+    path: '/masters/vehicle-types',
+    name: 'master-vehicle-types',
+    component: MastersView,
+  },
+  {
     path: '/masters/vehicles',
     name: 'master-vehicles',
+    component: MastersView,
+  },
+  {
+    path: '/masters/locations',
+    name: 'master-locations',
+    component: MastersView,
+  },
+  {
+    path: '/masters/lanes',
+    name: 'master-lanes',
     component: MastersView,
   },
 ]

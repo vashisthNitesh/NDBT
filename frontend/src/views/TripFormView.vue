@@ -172,12 +172,14 @@
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
             Customer / Consignor <span class="text-rose-500">*</span>
           </label>
-          <input
-            type="text"
+          <MasterSelect
             v-model="form.consignor"
-            required
-            placeholder="e.g. MRS or Laxmi Express"
-            class="w-full px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-hidden focus:border-blue-500 focus:bg-white text-slate-800"
+            :options="customerOptions"
+            labelKey="name"
+            valueKey="name"
+            sublabelKey="city"
+            placeholder="Select customer or enter..."
+            :required="true"
           />
         </div>
 
@@ -186,12 +188,16 @@
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
             Vehicle Registration No. <span class="text-rose-500">*</span>
           </label>
-          <input
-            type="text"
+          <MasterSelect
             v-model="form.vehicle"
-            required
-            placeholder="e.g. HR38W-8905"
-            class="w-full px-3.5 py-2 text-xs font-mono uppercase bg-slate-50 border border-slate-200 rounded-xl outline-hidden focus:border-blue-500 focus:bg-white text-slate-800"
+            :options="vehicleOptions"
+            labelKey="reg_no"
+            valueKey="reg_no"
+            sublabelKey="owner"
+            placeholder="Select vehicle reg..."
+            inputClass="font-mono uppercase font-bold"
+            :required="true"
+            @select="onVehicleSelect"
           />
         </div>
 
@@ -200,12 +206,14 @@
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
             Transporter / Lorry Owner <span class="text-rose-500">*</span>
           </label>
-          <input
-            type="text"
+          <MasterSelect
             v-model="form.transporter"
-            required
-            placeholder="e.g. JCM or TLS"
-            class="w-full px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-hidden focus:border-blue-500 focus:bg-white text-slate-800"
+            :options="vendorOptions"
+            labelKey="name"
+            valueKey="name"
+            sublabelKey="pan"
+            placeholder="Select transporter or enter..."
+            :required="true"
           />
         </div>
 
@@ -214,19 +222,31 @@
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
             Transit Lane / Corridor
           </label>
-          <div class="grid grid-cols-2 gap-2">
-            <input
-              type="text"
-              v-model="form.origin"
-              placeholder="Origin (e.g. Silvassa)"
-              class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-hidden focus:border-blue-500 focus:bg-white text-slate-800"
+          <div class="space-y-2">
+            <MasterSelect
+              v-model="selectedLaneName"
+              :options="laneOptions"
+              labelKey="name"
+              valueKey="name"
+              placeholder="Select predefined route (optional)..."
+              @select="onLaneSelect"
             />
-            <input
-              type="text"
-              v-model="form.destination"
-              placeholder="Destination (e.g. Ghaziabad)"
-              class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-hidden focus:border-blue-500 focus:bg-white text-slate-800"
-            />
+            <div class="grid grid-cols-2 gap-2">
+              <MasterSelect
+                v-model="form.origin"
+                :options="locationOptions"
+                labelKey="name"
+                valueKey="name"
+                placeholder="Origin..."
+              />
+              <MasterSelect
+                v-model="form.destination"
+                :options="locationOptions"
+                labelKey="name"
+                valueKey="name"
+                placeholder="Destination..."
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -638,13 +658,16 @@
             <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">
               Authorised Signatory
             </label>
-            <select
+            <MasterSelect
               v-model="slipFields.signatory"
-              class="w-full px-3 py-1.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-hidden focus:border-blue-500 cursor-pointer"
-            >
-              <option value="Dharambir Vashisth">Dharambir Vashisth</option>
-              <option value="Satbir Vashisth">Satbir Vashisth</option>
-            </select>
+              :options="authorityOptions"
+              labelKey="name"
+              valueKey="name"
+              placeholder="Select signatory..."
+              :clearable="false"
+              :allowCustom="false"
+              inputClass="font-bold text-slate-800"
+            />
           </div>
         </div>
       </div>
@@ -666,6 +689,7 @@ import api from '../services/api'
 import { formatINR, formatDate } from '../utils/formatters'
 import LiveMarginCalculator from '../components/common/LiveMarginCalculator.vue'
 import LorrySlipDocument from '../components/common/LorrySlipDocument.vue'
+import MasterSelect from '../components/common/MasterSelect.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -675,6 +699,19 @@ const activeTab = ref('booking')
 const saving = ref(false)
 const alertMessage = ref('')
 const alertSuccess = ref(true)
+
+// Master data options for comboboxes
+const customerOptions = ref([])
+const vehicleOptions = ref([])
+const vendorOptions = ref([])
+const vehicleTypeOptions = ref([])
+const locationOptions = ref([])
+const laneOptions = ref([])
+const selectedLaneName = ref('')
+const authorityOptions = [
+  { name: 'Dharambir Vashisth' },
+  { name: 'Satbir Vashisth' },
+]
 
 const tripData = ref({})
 const form = ref({
@@ -887,7 +924,42 @@ async function downloadSlipPdf() {
   }
 }
 
+async function loadMasterOptions() {
+  try {
+    const [cust, veh, ven, vt, loc, lanes] = await Promise.all([
+      api.getCustomers(),
+      api.getVehicles(),
+      api.getVendors(),
+      api.getVehicleTypes(),
+      api.getLocations(),
+      api.getLanes(),
+    ])
+    customerOptions.value = cust.data || []
+    vehicleOptions.value = veh.data || []
+    vendorOptions.value = ven.data || []
+    vehicleTypeOptions.value = vt.data || []
+    locationOptions.value = loc.data || []
+    laneOptions.value = lanes.data || []
+  } catch (err) {
+    console.error('Failed to load masters:', err)
+  }
+}
+
+function onVehicleSelect(item) {
+  if (item && item.owner) {
+    form.value.transporter = item.owner
+  }
+}
+
+function onLaneSelect(item) {
+  if (item) {
+    if (item.origin) form.value.origin = item.origin
+    if (item.destination) form.value.destination = item.destination
+  }
+}
+
 onMounted(() => {
+  loadMasterOptions()
   if (isEditMode.value) {
     loadTrip(route.params.id)
   }

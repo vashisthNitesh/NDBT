@@ -17,7 +17,11 @@ urlpatterns = [
     # Masters
     path('masters/customers/', api_views.master_customers_api, name='api_master_customers'),
     path('masters/transporters/', api_views.master_transporters_api, name='api_master_transporters'),
+    path('masters/vendors/', api_views.master_transporters_api, name='api_master_vendors'),
+    path('masters/vehicle-types/', api_views.master_vehicle_types_api, name='api_master_vehicle_types'),
     path('masters/vehicles/', api_views.master_vehicles_api, name='api_master_vehicles'),
+    path('masters/locations/', api_views.master_locations_api, name='api_master_locations'),
+    path('masters/lanes/', api_views.master_lanes_api, name='api_master_lanes'),
 
     # Reports
     path('reports/party-outstanding/', api_views.report_party_outstanding_api, name='api_report_party_outstanding'),

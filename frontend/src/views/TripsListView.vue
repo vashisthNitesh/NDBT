@@ -256,14 +256,14 @@
                   >
                     View / Edit
                   </router-link>
-                  <button
-                    type="button"
-                    @click="openSlipModal(t)"
-                    class="p-1 rounded-lg bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-700 text-xs font-bold transition-colors border border-indigo-200"
-                    title="Print / Generate Lorry Slip (PDF)"
+                  <router-link
+                    :to="`/lorry-slip?trip=${t.id}`"
+                    class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-700 text-xs font-bold transition-colors border border-indigo-200 inline-flex items-center gap-1"
+                    title="Open Lorry Slip Generator for this Trip"
                   >
-                    <Printer class="w-3.5 h-3.5" />
-                  </button>
+                    <FileText class="w-3.5 h-3.5" />
+                    <span>Slip</span>
+                  </router-link>
                 </div>
               </td>
             </tr>
@@ -375,7 +375,7 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Plus, Search, Printer, Download, X } from '@lucide/vue'
+import { Plus, Search, Printer, Download, X, FileText } from '@lucide/vue'
 import html2pdf from 'html2pdf.js'
 import api from '../services/api'
 import { formatINR, formatNumber, formatDate } from '../utils/formatters'

@@ -152,16 +152,25 @@
                 :class="isCurrentRoute('/masters/customers') ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'"
               >
                 <Users class="w-4 h-4" />
-                <span>Customers (Consignors)</span>
+                <span>Customers</span>
               </router-link>
 
               <router-link
-                to="/masters/transporters"
+                to="/masters/vendors"
                 class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-colors"
-                :class="isCurrentRoute('/masters/transporters') ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'"
+                :class="isCurrentRoute('/masters/vendors') || isCurrentRoute('/masters/transporters') ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'"
               >
                 <Building2 class="w-4 h-4" />
-                <span>Transporters / Owners</span>
+                <span>Vendors (Owners)</span>
+              </router-link>
+
+              <router-link
+                to="/masters/vehicle-types"
+                class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-colors"
+                :class="isCurrentRoute('/masters/vehicle-types') ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'"
+              >
+                <Layers class="w-4 h-4" />
+                <span>Vehicle Types</span>
               </router-link>
 
               <router-link
@@ -171,6 +180,24 @@
               >
                 <Truck class="w-4 h-4" />
                 <span>Vehicles (Lorries)</span>
+              </router-link>
+
+              <router-link
+                to="/masters/locations"
+                class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-colors"
+                :class="isCurrentRoute('/masters/locations') ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'"
+              >
+                <MapPin class="w-4 h-4" />
+                <span>Locations</span>
+              </router-link>
+
+              <router-link
+                to="/masters/lanes"
+                class="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-colors"
+                :class="isCurrentRoute('/masters/lanes') ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'"
+              >
+                <Route class="w-4 h-4" />
+                <span>Lanes (Routes)</span>
               </router-link>
             </div>
           </div>
@@ -278,6 +305,9 @@ import {
   Menu,
   X,
   Printer,
+  Layers,
+  MapPin,
+  Route,
 } from '@lucide/vue'
 
 const route = useRoute()

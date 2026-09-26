@@ -80,12 +80,44 @@ export default {
     return client.post('/masters/transporters/', payload)
   },
 
+  getVendors(q = '') {
+    return client.get('/masters/vendors/', { params: { q } })
+  },
+
+  createVendor(payload) {
+    return client.post('/masters/vendors/', payload)
+  },
+
+  getVehicleTypes(q = '') {
+    return client.get('/masters/vehicle-types/', { params: { q } })
+  },
+
+  createVehicleType(payload) {
+    return client.post('/masters/vehicle-types/', payload)
+  },
+
   getVehicles(q = '') {
     return client.get('/masters/vehicles/', { params: { q } })
   },
 
   createVehicle(payload) {
     return client.post('/masters/vehicles/', payload)
+  },
+
+  getLocations(q = '') {
+    return client.get('/masters/locations/', { params: { q } })
+  },
+
+  createLocation(payload) {
+    return client.post('/masters/locations/', payload)
+  },
+
+  getLanes(q = '') {
+    return client.get('/masters/lanes/', { params: { q } })
+  },
+
+  createLane(payload) {
+    return client.post('/masters/lanes/', payload)
   },
 
   // Reports

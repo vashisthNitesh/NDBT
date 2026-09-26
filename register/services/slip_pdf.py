@@ -234,7 +234,7 @@ def generate_lorry_slip_pdf(data: dict) -> bytes:
     ]
     
     def fmt_inr(v):
-        if not v:
+        if v is None or v == '' or str(v).strip() in ['', '-']:
             return '-'
         try:
             num = int(float(v))
@@ -243,13 +243,17 @@ def generate_lorry_slip_pdf(data: dict) -> bytes:
             return f"Rs. {v}/-"
 
     # Column 2 Data (Labels matching preview)
+    rate_val = data.get('rate') if 'rate' in data else data.get('freight')
+    advance_val = data.get('advance')
+    balance_val = data.get('balance')
+
     col2_data = [
         ("Goods:", data.get('goods_particulars') or 'P. Goods', False),
         ("Weight:", data.get('weight') or '-', False),
-        ("Freight Rate:", fmt_inr(data.get('rate') or data.get('freight')), False),
-        ("Total Freight:", fmt_inr(data.get('freight') or data.get('rate')), False),
-        ("Advance Paid:", fmt_inr(data.get('advance')), False),
-        ("Balance Payable:", fmt_inr(data.get('balance')), True),
+        ("Freight Rate:", fmt_inr(rate_val), False),
+        ("Total Freight:", fmt_inr(rate_val), False),
+        ("Advance Paid:", fmt_inr(advance_val), False),
+        ("Balance Payable:", fmt_inr(balance_val), True),
         ("Payment Terms:", "Subject to safe delivery", False),
     ]
     

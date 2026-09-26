@@ -736,7 +736,7 @@ def master_transporters_api(request):
 def master_vehicles_api(request):
     if request.method == 'GET':
         q = request.GET.get('q', '').strip()
-        qs = Vehicle.objects.select_related('default_owner').filter(is_active=True)
+        qs = Vehicle.objects.select_related('default_owner', 'vehicle_type').filter(is_active=True)
         if q:
             qs = qs.filter(reg_no__icontains=q)
 
@@ -746,8 +746,11 @@ def master_vehicles_api(request):
                 'reg_no': v.reg_no,
                 'owner': v.default_owner.name if v.default_owner else None,
                 'owner_id': v.default_owner_id,
+                'vehicle_type': v.vehicle_type.name if v.vehicle_type else None,
+                'vehicle_type_id': v.vehicle_type_id,
+                'capacity_tons': float(v.capacity_tons) if v.capacity_tons else None,
             }
-            for v in qs[:100]
+            for v in qs[:150]
         ]
         return api_json_response(results)
 
@@ -757,8 +760,180 @@ def master_vehicles_api(request):
         if not reg_no:
             return api_error('Vehicle registration number is required')
         norm, _ = normalize_vehicle_reg(reg_no)
-        v, created = Vehicle.objects.get_or_create(reg_no=norm)
-        return api_json_response({'id': v.id, 'reg_no': v.reg_no, 'created': created}, status=201)
+
+        defaults = {}
+        owner_id = data.get('owner_id')
+        owner_name = data.get('owner', '').strip()
+        if not owner_id and owner_name:
+            t, _ = Transporter.objects.get_or_create(name=owner_name)
+            owner_id = t.id
+        if owner_id:
+            defaults['default_owner_id'] = owner_id
+
+        vehicle_type_id = data.get('vehicle_type_id')
+        vehicle_type_name = data.get('vehicle_type', '').strip()
+        if not vehicle_type_id and vehicle_type_name:
+            vt, _ = VehicleType.objects.get_or_create(name=vehicle_type_name)
+            vehicle_type_id = vt.id
+        if vehicle_type_id:
+            defaults['vehicle_type_id'] = vehicle_type_id
+
+        if data.get('capacity_tons'):
+            try:
+                defaults['capacity_tons'] = Decimal(str(data['capacity_tons']))
+            except Exception:
+                pass
+
+        v, created = Vehicle.objects.get_or_create(reg_no=norm, defaults=defaults)
+        return api_json_response({
+            'id': v.id,
+            'reg_no': v.reg_no,
+            'owner': v.default_owner.name if v.default_owner else None,
+            'vehicle_type': v.vehicle_type.name if v.vehicle_type else None,
+            'created': created
+        }, status=201)
+
+
+@csrf_exempt
+@require_http_methods(['GET', 'POST'])
+def master_vehicle_types_api(request):
+    if request.method == 'GET':
+        q = request.GET.get('q', '').strip()
+        qs = VehicleType.objects.all()
+        if q:
+            qs = qs.filter(name__icontains=q)
+        results = [
+            {
+                'id': vt.id,
+                'name': vt.name,
+                'capacity_tons': float(vt.default_capacity_tons) if vt.default_capacity_tons else None,
+            }
+            for vt in qs[:100]
+        ]
+        return api_json_response(results)
+
+    elif request.method == 'POST':
+        data = json.loads(request.body.decode('utf-8'))
+        name = data.get('name', '').strip()
+        if not name:
+            return api_error('Vehicle type name is required')
+        cap = data.get('capacity_tons') or data.get('default_capacity_tons')
+        cap_dec = Decimal(str(cap)) if cap else Decimal('0.00')
+        vt, created = VehicleType.objects.get_or_create(
+            name=name,
+            defaults={'default_capacity_tons': cap_dec}
+        )
+        return api_json_response({
+            'id': vt.id,
+            'name': vt.name,
+            'capacity_tons': float(vt.default_capacity_tons),
+            'created': created
+        }, status=201)
+
+
+@csrf_exempt
+@require_http_methods(['GET', 'POST'])
+def master_locations_api(request):
+    if request.method == 'GET':
+        q = request.GET.get('q', '').strip()
+        qs = Location.objects.filter(is_active=True)
+        if q:
+            qs = qs.filter(Q(name__icontains=q) | Q(city__icontains=q) | Q(state__icontains=q) | Q(code__icontains=q))
+        results = [
+            {
+                'id': loc.id,
+                'name': loc.name,
+                'code': loc.code,
+                'city': loc.city,
+                'state': loc.state,
+                'location_type': loc.location_type,
+            }
+            for loc in qs[:150]
+        ]
+        return api_json_response(results)
+
+    elif request.method == 'POST':
+        data = json.loads(request.body.decode('utf-8'))
+        name = data.get('name', '').strip()
+        if not name:
+            return api_error('Location name is required')
+        loc, created = Location.objects.get_or_create(
+            name=name,
+            defaults={
+                'code': data.get('code', '').strip(),
+                'city': data.get('city', '').strip() or name,
+                'state': data.get('state', '').strip(),
+                'location_type': data.get('location_type', '').strip() or 'City',
+            }
+        )
+        return api_json_response({'id': loc.id, 'name': loc.name, 'created': created}, status=201)
+
+
+@csrf_exempt
+@require_http_methods(['GET', 'POST'])
+def master_lanes_api(request):
+    if request.method == 'GET':
+        q = request.GET.get('q', '').strip()
+        qs = Lane.objects.select_related('origin', 'destination').filter(is_active=True)
+        if q:
+            qs = qs.filter(
+                Q(name__icontains=q) |
+                Q(origin__name__icontains=q) |
+                Q(destination__name__icontains=q)
+            )
+        results = [
+            {
+                'id': lane.id,
+                'name': lane.name or f"{lane.origin.name} → {lane.destination.name}",
+                'origin': lane.origin.name,
+                'origin_id': lane.origin_id,
+                'destination': lane.destination.name,
+                'destination_id': lane.destination_id,
+                'distance_km': lane.standard_distance_km,
+                'transit_days': lane.standard_transit_days,
+            }
+            for lane in qs[:150]
+        ]
+        return api_json_response(results)
+
+    elif request.method == 'POST':
+        data = json.loads(request.body.decode('utf-8'))
+        origin_id = data.get('origin_id')
+        dest_id = data.get('destination_id')
+        origin_name = data.get('origin', '').strip()
+        dest_name = data.get('destination', '').strip()
+
+        if not origin_id and origin_name:
+            origin_loc, _ = Location.objects.get_or_create(name=origin_name)
+            origin_id = origin_loc.id
+        if not dest_id and dest_name:
+            dest_loc, _ = Location.objects.get_or_create(name=dest_name)
+            dest_id = dest_loc.id
+
+        if not origin_id or not dest_id:
+            return api_error('Origin and Destination are required for a lane')
+
+        orig_obj = Location.objects.get(id=origin_id)
+        dest_obj = Location.objects.get(id=dest_id)
+        default_name = f"{orig_obj.name} → {dest_obj.name}"
+        name = data.get('name', '').strip() or default_name
+
+        lane, created = Lane.objects.get_or_create(
+            origin_id=origin_id,
+            destination_id=dest_id,
+            defaults={
+                'name': name,
+                'standard_distance_km': data.get('distance_km'),
+                'standard_transit_days': data.get('transit_days'),
+            }
+        )
+        return api_json_response({
+            'id': lane.id,
+            'name': lane.name,
+            'origin': lane.origin.name,
+            'destination': lane.destination.name,
+            'created': created
+        }, status=201)
 
 
 # ---------------------------------------------------------------------------

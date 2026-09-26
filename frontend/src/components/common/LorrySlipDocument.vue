@@ -164,13 +164,13 @@
             <div class="grid grid-cols-12 px-3.5 py-2 items-center">
               <span class="col-span-5 text-slate-500 font-medium">Freight Rate:</span>
               <span class="col-span-7 font-mono font-semibold text-slate-900">
-                {{ formatRupee(slipData.rate || slipData.freight) }}
+                {{ formatRupee(displayRate) }}
               </span>
             </div>
             <div class="grid grid-cols-12 px-3.5 py-2 items-center">
               <span class="col-span-5 text-slate-500 font-medium">Total Freight:</span>
               <span class="col-span-7 font-mono font-semibold text-slate-900">
-                {{ formatRupee(slipData.freight || slipData.rate) }}
+                {{ formatRupee(displayRate) }}
               </span>
             </div>
             <div class="grid grid-cols-12 px-3.5 py-2 items-center">
@@ -258,6 +258,13 @@ const props = defineProps({
 
 const signatoryName = computed(() => {
   return props.slipData?.signatory || 'Dharambir Vashisth'
+})
+
+const displayRate = computed(() => {
+  if (props.slipData?.rate !== undefined && props.slipData?.rate !== null) {
+    return props.slipData.rate
+  }
+  return props.slipData?.freight
 })
 
 const formattedDate = computed(() => {
