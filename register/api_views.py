@@ -1,12 +1,14 @@
+import os
 import json
 from datetime import date, datetime
 from decimal import Decimal
 
+from django.conf import settings
 from django.core.paginator import Paginator, EmptyPage
 from django.db import transaction
 from django.db.models import Sum, Count, Q, F, Value, DecimalField
 from django.db.models.functions import Coalesce, TruncMonth
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, FileResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -1272,4 +1274,35 @@ def custom_slip_pdf_api(request):
     filename = f"NDBT_Slip_{slip_no}.pdf"
     disposition = 'attachment' if request.GET.get('download') == '1' else 'inline'
     response['Content-Disposition'] = f'{disposition}; filename="{filename}"'
+    return response
+
+
+# ---------------------------------------------------------------------------
+# Mobile APK Download
+# ---------------------------------------------------------------------------
+
+@require_http_methods(['GET', 'HEAD'])
+def download_apk_view(request):
+    """
+    Serves the NDBT Mobile Android APK package directly for mobile installation.
+    """
+    candidate_paths = [
+        os.path.join(settings.BASE_DIR, 'android-app', 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk'),
+        os.path.join(settings.BASE_DIR, 'static', 'downloads', 'NDBT_Transport.apk'),
+        os.path.join(settings.BASE_DIR, 'frontend', 'public', 'downloads', 'NDBT_Transport.apk'),
+        os.path.join(settings.BASE_DIR, 'downloads', 'NDBT_Transport.apk'),
+    ]
+    apk_path = None
+    for p in candidate_paths:
+        if os.path.exists(p) and os.path.getsize(p) > 0:
+            apk_path = p
+            break
+
+    if not apk_path:
+        return api_error('NDBT Mobile APK is currently being generated. Please retry in a few moments or open via mobile browser.', status=404)
+
+    file_handle = open(apk_path, 'rb')
+    response = FileResponse(file_handle, content_type='application/vnd.android.package-archive')
+    response['Content-Disposition'] = 'attachment; filename="NDBT_Transport.apk"'
+    response['Content-Length'] = os.path.getsize(apk_path)
     return response

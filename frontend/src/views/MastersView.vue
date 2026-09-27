@@ -434,15 +434,15 @@
               </div>
               <div>
                 <label class="block text-xs font-bold text-slate-600 mb-1">Type</label>
-                <select
+                <MasterSelect
                   v-model="modalForm.location_type"
-                  class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-hidden focus:border-blue-500"
-                >
-                  <option value="City">City</option>
-                  <option value="Hub">Hub</option>
-                  <option value="Warehouse">Warehouse</option>
-                  <option value="Branch">Branch</option>
-                </select>
+                  :options="locationTypeOptions"
+                  labelKey="name"
+                  valueKey="name"
+                  placeholder="Select type..."
+                  :clearable="false"
+                  :allowCustom="false"
+                />
               </div>
             </div>
             <div class="grid grid-cols-2 gap-3">
@@ -558,6 +558,14 @@ import {
   Route,
 } from '@lucide/vue'
 import api from '../services/api'
+import MasterSelect from '../components/common/MasterSelect.vue'
+
+const locationTypeOptions = [
+  { name: 'City' },
+  { name: 'Hub' },
+  { name: 'Warehouse' },
+  { name: 'Branch' },
+]
 
 const route = useRoute()
 

@@ -72,68 +72,75 @@
       <button
         type="button"
         @click="activeTab = 'booking'"
-        class="pb-3 px-4 text-xs font-bold transition-all border-b-2 whitespace-nowrap"
+        class="pb-3 px-4 text-xs font-bold transition-all border-b-2 whitespace-nowrap flex items-center gap-2"
         :class="activeTab === 'booking' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'"
       >
-        📋 Booking & Logistics
+        <ClipboardList class="w-4 h-4" />
+        <span>Booking & Logistics</span>
       </button>
 
       <button
         type="button"
         @click="activeTab = 'financials'"
-        class="pb-3 px-4 text-xs font-bold transition-all border-b-2 whitespace-nowrap"
+        class="pb-3 px-4 text-xs font-bold transition-all border-b-2 whitespace-nowrap flex items-center gap-2"
         :class="activeTab === 'financials' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'"
       >
-        💰 Financial Ledger & Margins
+        <BadgeDollarSign class="w-4 h-4" />
+        <span>Financial Ledger</span>
       </button>
 
       <button
         type="button"
         @click="activeTab = 'milestones'"
-        class="pb-3 px-4 text-xs font-bold transition-all border-b-2 whitespace-nowrap"
+        class="pb-3 px-4 text-xs font-bold transition-all border-b-2 whitespace-nowrap flex items-center gap-2"
         :class="activeTab === 'milestones' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'"
       >
-        🚚 Settlement & Milestones
+        <Truck class="w-4 h-4" />
+        <span>Settlement & Milestones</span>
       </button>
 
       <button
         v-if="isEditMode"
         type="button"
         @click="activeTab = 'receipts'"
-        class="pb-3 px-4 text-xs font-bold transition-all border-b-2 whitespace-nowrap"
+        class="pb-3 px-4 text-xs font-bold transition-all border-b-2 whitespace-nowrap flex items-center gap-2"
         :class="activeTab === 'receipts' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'"
       >
-        💵 Customer Receipts ({{ tripData.receipts?.length || 0 }})
+        <Receipt class="w-4 h-4" />
+        <span>Customer Receipts ({{ tripData.receipts?.length || 0 }})</span>
       </button>
 
       <button
         v-if="isEditMode"
         type="button"
         @click="activeTab = 'payments'"
-        class="pb-3 px-4 text-xs font-bold transition-all border-b-2 whitespace-nowrap"
+        class="pb-3 px-4 text-xs font-bold transition-all border-b-2 whitespace-nowrap flex items-center gap-2"
         :class="activeTab === 'payments' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'"
       >
-        💳 Owner Payments ({{ tripData.owner_payments?.length || 0 }})
+        <CreditCard class="w-4 h-4" />
+        <span>Owner Payments ({{ tripData.owner_payments?.length || 0 }})</span>
       </button>
 
       <button
         v-if="isEditMode"
         type="button"
         @click="activeTab = 'documents'"
-        class="pb-3 px-4 text-xs font-bold transition-all border-b-2 whitespace-nowrap"
+        class="pb-3 px-4 text-xs font-bold transition-all border-b-2 whitespace-nowrap flex items-center gap-2"
         :class="activeTab === 'documents' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'"
       >
-        📄 POD & Documents ({{ tripData.documents?.length || 0 }})
+        <FileText class="w-4 h-4" />
+        <span>POD & Documents ({{ tripData.documents?.length || 0 }})</span>
       </button>
 
       <button
         v-if="isEditMode"
         type="button"
         @click="activeTab = 'slip'"
-        class="pb-3 px-4 text-xs font-bold transition-all border-b-2 whitespace-nowrap flex items-center gap-1.5"
+        class="pb-3 px-4 text-xs font-bold transition-all border-b-2 whitespace-nowrap flex items-center gap-2"
         :class="activeTab === 'slip' ? 'border-blue-600 text-blue-600 font-black' : 'border-transparent text-slate-500 hover:text-slate-800'"
       >
-        <span>🎫 Lorry Slip (PDF)</span>
+        <Printer class="w-4 h-4" />
+        <span>Lorry Slip (PDF)</span>
       </button>
     </div>
 
@@ -371,7 +378,6 @@
           <input
             type="number"
             v-model.number="form.memo_no"
-            placeholder="Leave empty if pending memo"
             class="w-full px-3.5 py-2 text-xs font-mono bg-slate-50 border border-slate-200 rounded-xl outline-hidden focus:border-blue-500 focus:bg-white text-slate-800"
           />
         </div>
@@ -393,16 +399,16 @@
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
             Balance Settlement Status
           </label>
-          <select
+          <MasterSelect
             v-model="form.balance_status"
-            class="w-full px-3.5 py-2 text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl outline-hidden focus:border-blue-500 text-slate-800"
-          >
-            <option value="PENDING">Pending</option>
-            <option value="RECEIVED">Received</option>
-            <option value="NIL">Nil / Cleared</option>
-            <option value="NOT_RECEIVED">Not Received</option>
-            <option value="TO_PAY">To Pay</option>
-          </select>
+            :options="balanceStatusOptions"
+            labelKey="label"
+            valueKey="value"
+            placeholder="Select status..."
+            :clearable="false"
+            :allowCustom="false"
+            inputClass="font-bold text-slate-800"
+          />
         </div>
 
         <!-- Balance Received Date -->
@@ -683,8 +689,17 @@
 <script setup>
 import { ref, onMounted, computed, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeft, Printer, Download } from '@lucide/vue'
-import html2pdf from 'html2pdf.js'
+import {
+  ArrowLeft,
+  Printer,
+  Download,
+  ClipboardList,
+  BadgeDollarSign,
+  Truck,
+  Receipt,
+  CreditCard,
+  FileText,
+} from '@lucide/vue'
 import api from '../services/api'
 import { formatINR, formatDate } from '../utils/formatters'
 import LiveMarginCalculator from '../components/common/LiveMarginCalculator.vue'
@@ -711,6 +726,14 @@ const selectedLaneName = ref('')
 const authorityOptions = [
   { name: 'Dharambir Vashisth' },
   { name: 'Satbir Vashisth' },
+]
+
+const balanceStatusOptions = [
+  { value: 'PENDING', label: 'Pending' },
+  { value: 'RECEIVED', label: 'Received' },
+  { value: 'NIL', label: 'Nil / Cleared' },
+  { value: 'NOT_RECEIVED', label: 'Not Received' },
+  { value: 'TO_PAY', label: 'To Pay' },
 ]
 
 const tripData = ref({})
@@ -917,6 +940,8 @@ async function downloadSlipPdf() {
         html2canvas: { scale: 2, useCORS: true, logging: false },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       }
+      const html2pdfModule = await import('html2pdf.js')
+      const html2pdf = html2pdfModule.default || html2pdfModule
       await html2pdf().set(opt).from(element).save()
     }
   } finally {

@@ -29,4 +29,7 @@ urlpatterns = [
     path('reports/tds-register/', api_views.report_tds_register_api, name='api_report_tds_register'),
     path('reports/monthly-summary/', api_views.report_monthly_summary_api, name='api_report_monthly_summary'),
     path('reports/pending-operations/', api_views.report_pending_operations_api, name='api_report_pending_operations'),
+
+    # Mobile APK download
+    path('download-apk/', api_views.download_apk_view, name='api_download_apk'),
 ]

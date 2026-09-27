@@ -58,7 +58,10 @@
 
       <!-- Mobile Table Swipe Hint -->
       <div class="sm:hidden px-3.5 py-1.5 text-[11px] font-semibold text-slate-500 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
-        <span>👉 Swipe horizontally for full report</span>
+        <span class="flex items-center gap-1.5">
+          <ArrowRightLeft class="w-3.5 h-3.5 text-slate-400" />
+          <span>Swipe horizontally for full report</span>
+        </span>
         <span class="text-[10px] text-slate-400">Scroll &rarr;</span>
       </div>
 
@@ -98,6 +101,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { ArrowRightLeft } from '@lucide/vue'
 import api from '../services/api'
 import { formatINR, formatNumber } from '../utils/formatters'
 

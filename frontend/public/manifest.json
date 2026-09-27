@@ -1,0 +1,23 @@
+{
+  "name": "NDBT Transport Portal",
+  "short_name": "NDBT",
+  "description": "New Delhi Bombay Transport - Enterprise Fleet & Lorry Portal",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#2563eb",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/ganesha.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

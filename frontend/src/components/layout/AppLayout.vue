@@ -204,18 +204,19 @@
         </div>
       </div>
 
-      <!-- Bottom Profile & Admin Link -->
+      <!-- Bottom Profile & Mobile APK Download -->
       <div class="p-4 border-t border-slate-100 bg-slate-50/50">
         <a
-          href="/admin/"
-          target="_blank"
-          class="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-blue-600 hover:bg-white border border-slate-200/80 mb-3 transition-colors shadow-2xs"
+          href="/api/download-apk/"
+          download="NDBT_Transport.apk"
+          class="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100/90 border border-emerald-200 mb-3 transition-colors shadow-2xs group cursor-pointer"
+          title="Download Android APK for Mobile"
         >
           <span class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-            Django Admin Portal
+            <Smartphone class="w-4 h-4 text-emerald-600 group-hover:scale-110 transition-transform" />
+            <span>NDBT Mobile App</span>
           </span>
-          <ExternalLink class="w-3.5 h-3.5 text-slate-400" />
+          <span class="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-emerald-200/80 text-emerald-900 font-mono">APK</span>
         </a>
 
         <div class="flex items-center gap-3 px-2">
@@ -239,12 +240,27 @@
 
     <!-- Main Content Area -->
     <div class="flex-1 lg:pl-72 flex flex-col min-w-0">
+      <!-- Mobile Top App Announcement Banner -->
+      <div class="lg:hidden bg-slate-900 text-white px-3.5 py-2 flex items-center justify-between text-xs border-b border-slate-800">
+        <div class="flex items-center gap-2 min-w-0">
+          <Smartphone class="w-4 h-4 text-emerald-400 shrink-0" />
+          <span class="truncate text-[11px] font-bold text-slate-200">NDBT Mobile App (Android APK)</span>
+        </div>
+        <a
+          href="/api/download-apk/"
+          download="NDBT_Transport.apk"
+          class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] shrink-0 transition-colors shadow-xs"
+        >
+          Download APK
+        </a>
+      </div>
+
       <!-- Top Navbar -->
       <header class="h-16 bg-white border-b border-slate-200 px-3 sm:px-6 flex items-center justify-between sticky top-0 z-30">
         <div class="flex items-center gap-2 sm:gap-4 flex-1 min-w-0 pr-2">
           <button
             @click="isMobileOpen = true"
-            class="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 shrink-0"
+            class="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 shrink-0 cursor-pointer"
           >
             <Menu class="w-5 h-5" />
           </button>
@@ -263,6 +279,16 @@
         </div>
 
         <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+          <a
+            href="/api/download-apk/"
+            download="NDBT_Transport.apk"
+            class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 text-xs font-bold transition-all border border-slate-200/80"
+            title="Download Android APK for Mobile"
+          >
+            <Smartphone class="w-3.5 h-3.5 text-emerald-600" />
+            <span>Mobile APK</span>
+          </a>
+
           <div class="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-blue-700 text-xs font-bold">
             <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
             FY 2026-27 Active
@@ -299,7 +325,7 @@ import {
   AlertTriangle,
   Users,
   Building2,
-  ExternalLink,
+  Smartphone,
   Search,
   Plus,
   Menu,

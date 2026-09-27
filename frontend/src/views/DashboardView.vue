@@ -258,7 +258,10 @@
 
       <!-- Mobile Table Swipe Hint -->
       <div class="sm:hidden px-3.5 py-1.5 text-[11px] font-semibold text-slate-500 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
-        <span>👉 Swipe horizontally for full trip ledger</span>
+        <span class="flex items-center gap-1.5">
+          <ArrowRightLeft class="w-3.5 h-3.5 text-slate-400" />
+          <span>Swipe horizontally for full trip ledger</span>
+        </span>
         <span class="text-[10px] text-slate-400">Scroll &rarr;</span>
       </div>
 
@@ -267,7 +270,7 @@
         <table class="w-full text-left text-xs whitespace-nowrap">
           <thead class="bg-slate-50/80 text-[11px] font-black uppercase tracking-wider text-slate-500 border-b border-slate-200">
             <tr>
-              <th class="py-3 px-4">LR No.</th>
+              <th class="py-3 px-4 sticky left-0 bg-slate-50/95 z-20 shadow-xs">LR No.</th>
               <th class="py-3 px-4">Date</th>
               <th class="py-3 px-4">Vehicle</th>
               <th class="py-3 px-4">Customer (Consignor)</th>
@@ -284,7 +287,7 @@
               :key="trip.id"
               class="hover:bg-blue-50/40 transition-colors"
             >
-              <td class="py-3 px-4 font-black text-blue-600 font-mono-numbers">
+              <td class="py-3 px-4 font-black text-blue-600 font-mono-numbers sticky left-0 bg-white group-hover:bg-blue-50/40 z-10 shadow-xs">
                 <router-link :to="`/trips/${trip.id}`" class="hover:underline">
                   #{{ trip.lr_no }}
                 </router-link>
@@ -315,10 +318,11 @@
               <td class="py-3 px-4 text-center">
                 <router-link
                   :to="`/lorry-slip?trip=${trip.id}`"
-                  class="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-700 text-xs font-bold transition-colors border border-indigo-200 inline-flex items-center"
-                  title="Generate Lorry Slip PDF"
+                  class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-700 text-xs font-bold transition-colors border border-indigo-200 inline-flex items-center gap-1"
+                  title="Open Lorry Slip Generator (Form & Preview)"
                 >
-                  <Printer class="w-3.5 h-3.5" />
+                  <FileText class="w-3.5 h-3.5" />
+                  <span>Slip</span>
                 </router-link>
               </td>
             </tr>
@@ -346,6 +350,7 @@ import {
   AlertCircle,
   MapPin,
   ArrowRight,
+  ArrowRightLeft,
   Printer,
 } from '@lucide/vue'
 import api from '../services/api'

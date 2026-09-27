@@ -11,3 +11,10 @@ staticfiles/
 *.log
 import_report.csv
 master_duplicates.csv
+
+# Android build artifacts
+.gradle/
+android-app/.gradle/
+android-app/build/
+android-app/**/build/
+*.apk.idsig

@@ -67,18 +67,20 @@
       <button
         type="button"
         @click="mobileView = 'edit'"
-        class="flex-1 py-1.5 text-xs font-bold rounded-lg transition-all"
+        class="flex-1 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
         :class="mobileView === 'edit' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'"
       >
-        ✏️ Edit Slip Data
+        <SlidersHorizontal class="w-3.5 h-3.5 text-blue-600" />
+        <span>Edit Slip Data</span>
       </button>
       <button
         type="button"
         @click="mobileView = 'preview'"
-        class="flex-1 py-1.5 text-xs font-bold rounded-lg transition-all"
+        class="flex-1 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
         :class="mobileView === 'preview' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'"
       >
-        📄 Slip Preview
+        <Eye class="w-3.5 h-3.5 text-indigo-600" />
+        <span>Slip Preview</span>
       </button>
     </div>
 
@@ -353,7 +355,6 @@
                 type="text"
                 v-model="slip.rate"
                 @input="autoCalculateBalance"
-                placeholder="Leave blank or enter..."
                 class="w-full px-2.5 py-1.5 text-xs font-mono font-bold bg-slate-50 border border-slate-200 rounded-xl outline-hidden focus:border-blue-500"
               />
             </div>
@@ -365,7 +366,6 @@
                 type="text"
                 v-model="slip.advance"
                 @input="autoCalculateBalance"
-                placeholder="Leave blank or enter..."
                 class="w-full px-2.5 py-1.5 text-xs font-mono font-bold bg-slate-50 border border-slate-200 rounded-xl outline-hidden focus:border-blue-500"
               />
             </div>
@@ -376,7 +376,6 @@
               <input
                 type="text"
                 v-model="slip.balance"
-                placeholder="Leave blank or enter..."
                 class="w-full px-2.5 py-1.5 text-xs font-mono font-bold bg-slate-50 border border-slate-200 rounded-xl outline-hidden focus:border-blue-500"
               />
             </div>
@@ -427,8 +426,7 @@
 <script setup>
 import { ref, reactive, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { ArrowLeft, Printer, Download, Search } from '@lucide/vue'
-import html2pdf from 'html2pdf.js'
+import { ArrowLeft, Printer, Download, Search, SlidersHorizontal, Eye } from '@lucide/vue'
 import api from '../services/api'
 import LorrySlipDocument from '../components/common/LorrySlipDocument.vue'
 import MasterSelect from '../components/common/MasterSelect.vue'
@@ -714,6 +712,8 @@ async function downloadPdf() {
         html2canvas: { scale: 2, useCORS: true, logging: false },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       }
+      const html2pdfModule = await import('html2pdf.js')
+      const html2pdf = html2pdfModule.default || html2pdfModule
       await html2pdf().set(opt).from(element).save()
       statusMsg.value = `PDF for Slip #${slip.slip_no} downloaded successfully!`
       statusSuccess.value = true

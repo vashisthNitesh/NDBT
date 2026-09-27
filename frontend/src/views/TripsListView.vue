@@ -33,33 +33,39 @@
       </div>
 
       <!-- FY Dropdown -->
-      <select
-        v-model="filters.fy"
-        @change="applyFilters"
-        class="px-3 py-2 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl outline-hidden focus:border-blue-500 text-slate-700"
-      >
-        <option value="">All Financial Years</option>
-        <option value="2026-27">FY 2026-27</option>
-        <option value="2025-26">FY 2025-26</option>
-        <option value="2024-25">FY 2024-25</option>
-        <option value="2023-24">FY 2023-24</option>
-        <option value="2022-23">FY 2022-23</option>
-        <option value="2021-22">FY 2021-22</option>
-      </select>
+      <div class="relative">
+        <select
+          v-model="filters.fy"
+          @change="applyFilters"
+          class="appearance-none pl-3 pr-8 py-2 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl outline-hidden focus:border-blue-500 text-slate-700 cursor-pointer"
+        >
+          <option value="">All Financial Years</option>
+          <option value="2026-27">FY 2026-27</option>
+          <option value="2025-26">FY 2025-26</option>
+          <option value="2024-25">FY 2024-25</option>
+          <option value="2023-24">FY 2023-24</option>
+          <option value="2022-23">FY 2022-23</option>
+          <option value="2021-22">FY 2021-22</option>
+        </select>
+        <ChevronDown class="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+      </div>
 
       <!-- Status Dropdown -->
-      <select
-        v-model="filters.status"
-        @change="applyFilters"
-        class="px-3 py-2 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl outline-hidden focus:border-blue-500 text-slate-700"
-      >
-        <option value="">All Statuses</option>
-        <option value="RECEIVED">Received</option>
-        <option value="PENDING">Pending</option>
-        <option value="NIL">Nil / Cleared</option>
-        <option value="NOT_RECEIVED">Not Received</option>
-        <option value="TO_PAY">To Pay</option>
-      </select>
+      <div class="relative">
+        <select
+          v-model="filters.status"
+          @change="applyFilters"
+          class="appearance-none pl-3 pr-8 py-2 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl outline-hidden focus:border-blue-500 text-slate-700 cursor-pointer"
+        >
+          <option value="">All Statuses</option>
+          <option value="RECEIVED">Received</option>
+          <option value="PENDING">Pending</option>
+          <option value="NIL">Nil / Cleared</option>
+          <option value="NOT_RECEIVED">Not Received</option>
+          <option value="TO_PAY">To Pay</option>
+        </select>
+        <ChevronDown class="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+      </div>
 
       <!-- Memo Filter -->
       <button
@@ -156,7 +162,10 @@
     <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden">
       <!-- Mobile Table Swipe Hint -->
       <div class="sm:hidden px-3.5 py-1.5 text-[11px] font-semibold text-slate-500 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
-        <span>👉 Swipe horizontally for full trip ledger</span>
+        <span class="flex items-center gap-1.5">
+          <ArrowRightLeft class="w-3.5 h-3.5 text-slate-400" />
+          <span>Swipe horizontally for full trip ledger</span>
+        </span>
         <span class="text-[10px] text-slate-400">Scroll &rarr;</span>
       </div>
 
@@ -164,7 +173,7 @@
         <table class="w-full text-left text-xs whitespace-nowrap">
           <thead class="bg-slate-50/90 text-[11px] font-black uppercase tracking-wider text-slate-500 border-b border-slate-200">
             <tr>
-              <th class="py-3.5 px-4 cursor-pointer hover:text-blue-600" @click="sortBy('lr_no')">
+              <th class="py-3.5 px-4 cursor-pointer hover:text-blue-600 sticky left-0 bg-slate-50/95 z-20 shadow-xs" @click="sortBy('lr_no')">
                 LR No.
               </th>
               <th class="py-3.5 px-4 cursor-pointer hover:text-blue-600" @click="sortBy('booking_date')">
@@ -203,7 +212,7 @@
               :key="t.id"
               class="hover:bg-blue-50/40 transition-colors"
             >
-              <td class="py-3 px-4 font-black text-blue-600 font-mono-numbers">
+              <td class="py-3 px-4 font-black text-blue-600 font-mono-numbers sticky left-0 bg-white group-hover:bg-blue-50/40 z-10 shadow-xs">
                 <router-link :to="`/trips/${t.id}`" class="hover:underline">
                   #{{ t.lr_no }}
                 </router-link>
@@ -375,8 +384,7 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Plus, Search, Printer, Download, X, FileText } from '@lucide/vue'
-import html2pdf from 'html2pdf.js'
+import { Plus, Search, Printer, Download, X, FileText, ChevronDown, ArrowRightLeft } from '@lucide/vue'
 import api from '../services/api'
 import { formatINR, formatNumber, formatDate } from '../utils/formatters'
 import StatusPill from '../components/common/StatusPill.vue'
@@ -598,6 +606,8 @@ async function downloadModalSlip() {
         html2canvas: { scale: 2, useCORS: true, logging: false },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       }
+      const html2pdfModule = await import('html2pdf.js')
+      const html2pdf = html2pdfModule.default || html2pdfModule
       await html2pdf().set(opt).from(element).save()
     }
   } finally {
